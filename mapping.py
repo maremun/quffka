@@ -3,11 +3,13 @@
 #   mapping.py
 
 import numpy as np
+
 from math import sqrt
 from numba import jit
-from butterfly import batch_butterfly_matvec, butterfly_matvec
-from utils import get_d0, batch_simplex_matvec, simplex_matvec, \
-                  butterfly_params, radius
+
+from basics import get_d0, batch_simplex_matvec, simplex_matvec, radius
+from butterfly import butterfly_params
+from butterfly_matvecs import batch_butterfly_matvec, butterfly_matvec
 
 
 @jit(nopython=True)
@@ -82,13 +84,11 @@ def fast_batch_mapping_matvec(x, k, r=None, b_params=None, even=False):
         div = t*(n+1)
         Mx[div:, :] = -Mx[:d0-div, :]
         w[div:] = w[:d0-div]
-
     return Mx, w
 
 
 @jit(nopython=True)
 def fast_batch_approx_arccos1(x, div, k, r, b_params, gamma=None):
-    #numba does not support kwargs or args properly
     n = x.shape[0]
     nsamples = get_d0(k, n)
 
@@ -103,13 +103,11 @@ def fast_batch_approx_arccos1(x, div, k, r, b_params, gamma=None):
     Mz = np.empty((Mx.shape[1] - div, Mx.shape[0]))
     Mz[:, :] = Mx[:, div:].T
     K = 2 * np.dot(Mxx, Mz.T) / nsamples
-
     return K
 
 
 @jit(nopython=True)
 def fast_batch_approx_arccos0(x, div, k, r, b_params, gamma=None):
-    #numba does not support kwargs or args properly
     n = x.shape[0]
     nsamples = get_d0(k, n)
 
@@ -132,7 +130,6 @@ def fast_batch_approx_arccos0(x, div, k, r, b_params, gamma=None):
     Mz[:, :] = Mx[:, div:].T
     K = 2 * np.dot(Mxx, Mz.T) / nsamples
     K += 0.5 * (1 - np.mean(np.power(w, 2)))
-
     return K
 
 
@@ -166,15 +163,12 @@ def fast_batch_approx_rbf(x, div, k, r, b_params, gamma=None):
     MZ = np.empty((features.shape[1] - div, features.shape[0]))
     MZ[:, :] = features[:, div:].T
     K = np.dot(MX, MZ.T) / nsamples
-
     K += 1 - np.mean(np.power(w, 2))
-
     return K
 
 
 @jit(nopython=True)
 def fast_batch_approx_angular(x, div, k, r, b_params, gamma=None):
-    #numba does not support kwargs or args properly
     n = x.shape[0]
     nsamples = get_d0(k, n)
 
@@ -189,7 +183,6 @@ def fast_batch_approx_angular(x, div, k, r, b_params, gamma=None):
     Mz = np.empty((Mx.shape[1] - div, Mx.shape[0]))
     Mz[:, :] = Mx[:, div:].T
     K = np.dot(Mxx, Mz.T) / nsamples
-
     return K
 
 
@@ -208,11 +201,6 @@ def fast_batch_approx_linear(x, div, k, r, b_params):
     Mz = np.empty((Mx.shape[1] - div, Mx.shape[0]))
     Mz[:, :] = Mx[:, div:].T
     K = np.dot(Mxx, Mz.T) / nsamples
-
-    #Mz = Mx[:, div:]
-    #Mx = Mx[:, :div]
-    #K = np.dot(Mx.T, Mz) / nsamples
-
     return K
 
 
@@ -261,7 +249,6 @@ def fast_mapping_matvec(x, k, r, cos, sin, p):
     div = k*(n+1)
     Mx[div:] = -Mx[:d0-div]
     w[div:] = w[:d0-div]
-
     return Mx, w
 
 
@@ -292,5 +279,4 @@ def fast_approx_arccos(x, z, k, r=None, b_params=None):
         Mz[:, i] *= w[i]
 
     K = 2 * np.dot(Mx, Mz.T) / nsamples
-
     return K

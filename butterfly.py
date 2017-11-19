@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 #   encoding: utf-8
 #   butterfly.py
-
-
+# TODO fix documentation
 import numpy as np
-from numba import jit, prange
+
+from math import sqrt
+from numba import jit
 from scipy.linalg import block_diag
+from scipy.stats import chi
 
 NQ = 3
+
 
 @jit(nopython=True)
 def butterfly_generating_vector(n):
@@ -53,12 +56,7 @@ def butterfly_generating_vector(n):
         u[2] = (2 * r[1] - 1) * p
         u[1] = 2 * np.sqrt(r[1] * (1 - r[1])) * p * s
         u[0] = 2 * np.sqrt(r[1] * (1 - r[1])) * p * c
-
-    return u   
-    #u = np.random.randn(n)
-    #u /= np.linalg.norm(u)
-
-    #return u
+    return u
 
 
 @jit(nopython=True)
@@ -80,6 +78,39 @@ def butterfly_angles(u):
     thetas = np.arctan2(u[:-1], u[1:])
     return thetas
 
+
+@jit(nopython=True)
+def cos_sin(N):
+    c = np.log2(N)
+    f = np.ceil(c)
+    n = int(2 ** f)
+    u = butterfly_generating_vector(n)
+    thetas = butterfly_angles(u)
+    if c != f:
+        thetas = np.concatenate((thetas[:N-1], np.array([0.] * (n - N))))
+    cos = np.cos(thetas)
+    sin = np.sin(thetas)
+    return cos, sin
+
+
+@jit(nopython=True)
+def butterfly_params(n, k):
+    h = int(np.ceil(k))
+    log = np.log2(n)
+    next_power = 2**int(np.ceil(log))
+    cos = np.empty((h, next_power-1))
+    sin = np.empty((h, next_power-1))
+    perm = np.empty((h, n), np.int32)
+    for i in range(h):
+        c, s = cos_sin(n)
+        cos[i] = c
+        sin[i] = s
+        p = np.arange(n)
+        np.random.shuffle(p)
+        perm[i] = p
+    return cos, sin, perm
+
+
 #@jit(nopython=True)
 def butterfly_block(n, cos, sin):
     '''
@@ -91,6 +122,7 @@ def butterfly_block(n, cos, sin):
     Q -= Q.T
     np.fill_diagonal(Q, cos[i-1])
     return Q
+
 
 #@jit(nopython=True)
 def butterfly_factors(n, cos, sin, N):
@@ -133,23 +165,8 @@ def butterfly_factors(n, cos, sin, N):
             hh = -j
             di = np.arange(N+hh-ll) + ll
             Qs[i][di, di] = 1.
-            #di = np.diag_indices(N)
-            #Qs[i][di[0][ll:hh], di[1][ll:hh]] = 1.
-
     return Qs
 
-@jit(nopython=True)
-def cos_sin(N):
-    c = np.log2(N)
-    f = np.ceil(c)
-    n = int(2 ** f)
-    u = butterfly_generating_vector(n)
-    thetas = butterfly_angles(u)
-    if c != f:
-        thetas = np.concatenate((thetas[:N-1], np.array([0.] * (n - N))))
-    cos = np.cos(thetas)
-    sin = np.sin(thetas)
-    return cos, sin
 
 #@jit(nopython=True)
 def butterfly(N, cos=None, sin=None, perm=None):
@@ -189,42 +206,6 @@ def butterfly(N, cos=None, sin=None, perm=None):
 
     return QP, Qs, cs, perm
 
-def dense_butterfly(n, cos, sin, hat=False):
-    '''
-    Generates dense random butterfly orthogonal matrix.
-
-    Args:
-    =====
-    n: resulting matrix is of size n x n.
-    cos: cosines of generating angles.
-    sin: sines of generating angles.
-
-    Returns:
-    ========
-    Q: random butterfly orthogonal matrix of size n x n.
-    '''
-    if n == 1:
-        return np.array(1)
-    c = np.log2(n)
-    if c != np.floor(c):
-        raise Exception('n is not power of two.')
-
-    h = n//2
-    Qhalf = dense_butterfly(h, cos, sin)
-    Qhalf_hat = dense_butterfly(h, cos[h:], sin[h:], n)
-    i = n//2 - 1
-    if not hat:
-        Qn = np.hstack((Qhalf * cos[i],
-                        -Qhalf * sin[i]))
-        Qn_hat = np.hstack((Qhalf_hat * sin[i],
-                            Qhalf_hat * cos[i]))
-    else:
-        Qn = np.hstack((Qhalf * cos[i],
-                        -Qhalf * sin[i]))
-        Qn_hat = np.hstack((Qhalf_hat * sin[i],
-                            Qhalf_hat * cos[i]))
-    Qn = np.vstack((Qn, Qn_hat))
-    return Qn
 
 #@jit(nopython=True)
 def butterfly_transform(S, cos, sin, perm):
@@ -248,135 +229,43 @@ def butterfly_transform(S, cos, sin, perm):
     return QS
 
 
-@jit(nopython=True)
-def factor_matvec(x, k, cos, sin):
-    '''
-    Matvec for Q_k^T x, where k is the index number of k'th factor
-        of butterfly matrix Q. Facilitates fast butterfly simplex weights
-        multiplication by data vector:
-        [QV]^T x = V^T Q^T x = V^T Q_{log2(n)}^T ... q_0^T x
+#@jit(nopython=True)
+def generate_butterfly_weights(k, n, r=None, b_params=None, even=False):
+    d0 = get_d0(k, n)
+    if even:
+        t = int(np.ceil(2*k))
+    else:
+        t = int(np.ceil(k))
+    if r is None:
+        r = radius(n, k)
+    if b_params is None:
+        b_params = butterfly_params(n, k)
+    S = rnsimp(n)
+    cos, sin, perm = b_params
+    M = butterfly_transform(S, cos[0], sin[0], perm[0]).T
+    for i in range(1, t):
+        L = butterfly_transform(S, cos[i], sin[i], perm[i])
+        M = np.vstack((M, L.T))
+    mp = n + 1
+    r = np.repeat(r, mp)
+    M = np.einsum('i,ij->ij', r, M)
+    w = sqrt(n) / r
+    if even is False:
+        M = np.vstack((M, -M))
+        w = np.concatenate((w, w))
+    return M[:d0, :], w[:d0]
 
-    Args:
-    =====
-    x: data vector
-    k: the index number of k'th butterfly factor Q_k
-    cos: cosines used to generate butterfly matrix Q
-    sin: sines used to generate butterfly matrix Q
-    '''
-    n = len(cos) + 1
-    N = x.shape[0]
-    blockn = 2**k
-    nblocks = int(np.ceil(N/blockn))
-    step = blockn//2
-    for i in range(nblocks - 1):
-        shift = blockn*i
-        idx = step + shift - 1
-        c = cos[idx]
-        s = sin[idx]
-        for j in range(step):
-            i1 = shift + j
-            i2 = shift + j + step
-            y1 = x[i1]
-            y2 = x[i2]
-            x[i1] = c * y1 + s * y2
-            x[i2] = -s * y1 + c * y2
 
-    # Last block is special since N might not be a power of 2,
-    # which causes cutting the matrix and replacing some elements
-    # with ones.
-    # We calculate t - the number of lines to fill in before proceeding.
-    i = nblocks - 1
-    shift = blockn*i
-    idx = step + shift - 1
-    c = cos[idx]
-    s = sin[idx]
-    t = N - shift - step
-    for j in range(t):
-            i1 = shift + j
-            i2 = shift + j + step
-            y1 = x[i1]
-            y2 = x[i2]
-            x[i1] = c * y1 + s * y2
-            x[i2] = -s * y1 + c * y2
-
-    return x
-
-@jit(nopython=True)
-def batch_factor_matvec(x, k, cos, sin):
-    '''
-    Matvec for Q_k^T x, where k is the index number of k'th factor
-        of butterfly matrix Q. Facilitates fast butterfly simplex weights
-        multiplication by data vector:
-        [QV]^T x = V^T Q^T x = V^T Q_{log2(n)}^T ... Q_0^T x
-
-    Args:
-    =====
-    x: a batch of data vectors
-    k: the index number of k'th butterfly factor Q_k
-    cos: cosines used to generate butterfly matrix Q
-    sin: sines used to generate butterfly matrix Q
-    '''
-    nobj = x.shape[1]
-    N = x.shape[0]
-    n = len(cos) + 1
-    blockn = 2**k
-    nblocks = int(np.ceil(N/blockn))
-    r = np.copy(x)
-    step = blockn//2
-    for i in range(nblocks - 1):
-        shift = blockn*i
-        idx = step + shift - 1
-        c = cos[idx]
-        s = sin[idx]
-        for j in range(step):
-            i1 = shift + j
-            i2 = i1 + step
-            for o in range(nobj):
-                y1 = x[i1, o]
-                y2 = x[i2, o]
-                r[i1, o] = c * y1 + s * y2
-                r[i2, o] = -s * y1 + c * y2
-
-    # Last block is special since N might not be a power of 2,
-    # which causes cutting the matrix and replacing some elements
-    # with ones.
-    # We calculate t - the number of lines to fill in before proceeding.
-    i = nblocks - 1
-    shift = blockn*i
-    idx = step + shift - 1
-    c = cos[idx]
-    s = sin[idx]
-    t = N - shift - step
-    for j in range(t):
-        i1 = shift + j
-        i2 = i1 + step
-        for o in range(nobj):
-            y1 = x[i1, o]
-            y2 = x[i2, o]
-            r[i1, o] = c * y1 + s * y2
-            r[i2, o] = -s * y1 + c * y2
-
-    return r
-
-@jit(nopython=True)
-def butterfly_matvec(x, cos, sin, p):
-    n = x.shape[0]
-    h = int(np.ceil(np.log2(n)))
-    for _ in range(NQ):
-        for k in range(1, h+1):
-            x = factor_matvec(x, k, cos, sin)
-        x = x[p]
-
-    return x
-
-@jit(nopython=True)
-def batch_butterfly_matvec(x, cos, sin, p):
-    n = x.shape[0]
-    h = int(np.ceil(np.log2(n)))
-
-    for _ in range(NQ):
-        for k in range(1, h+1):
-            x = batch_factor_matvec(x, k, cos, sin)
-        x = x[p, :]
-
-    return x
+def generate_orthogonal_weights(k, n):
+    d0 = get_d0(k, n)
+    t = int(np.ceil(d0/n))
+    Q, _ = butterfly(n)
+    d = chi.rvs(n, size=n)
+    S = np.diag(d)
+    M = S.dot(Q)
+    for _ in range(t-1):
+        Q, _ = butterfly(n)
+        d = chi.rvs(n, size=n)
+        S = np.diag(d)
+        M = np.vstack((M, S.dot(Q)))
+    return M[:d0, :], None

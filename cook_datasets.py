@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 with open('datasets/letter/letter-recognition.data', 'r') as f:
     lines = f.readlines()
-    
+
 data = np.empty([len(lines), 16])
 labels = np.empty(len(lines))
 for i,line in enumerate(lines):

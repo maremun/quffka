@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 #   encoding: utf-8
 #   kernels.py
-
+# TODO documentation!
 import numpy as np
+
 from math import sqrt
 
-def pad_data(x, z, d1, n):
-    pad = lambda xz: np.lib.pad(xz, ((0, 0), (0, d1-n)), 'constant', \
-            constant_values=(0))
-    x = pad(x)
-    z = pad(z)
-
-    return x, z
+from basics import pad_data
 
 
 def calculate_theta(x, z):
@@ -23,8 +18,7 @@ def calculate_theta(x, z):
     div[div >= 1.] = 1.
     div[div <= -1.] = -1.
     theta = np.arccos(div)
-
-    return theta, nxnz 
+    return theta, nxnz
 
 
 def arccos1_kernel(x, z):
@@ -45,7 +39,6 @@ def approximate_arccos1_kernel(x, z, M, w=None, **kwargs):
         Mx = multiply(Mx)
         Mz = multiply(Mz)
     K = 2 * np.dot(Mx.T, Mz) / nsamples
-
     return K
 
 
@@ -69,7 +62,6 @@ def approximate_arccos0_kernel(x, z, M, w=None, **kwargs):
     K = 2 * np.dot(Mx.T, Mz) / nsamples
     if w is not None:
         K += 0.5 * (1 - np.mean(np.power(w, 2)))
-
     return K
 
 
@@ -106,7 +98,6 @@ def approximate_rbf_kernel(x, z, M, w=None, **kwargs):
     K = Mx.T.dot(Mz) / nsamples
     if w is not None:
         K += 1 - np.mean(np.power(w, 2))
-
     return K
 
 
@@ -129,7 +120,6 @@ def approximate_linear_kernel(x, z, M, w=None, **kwargs):
         Mz = multiply(Mz)
 
     K = np.dot(Mx.T, Mz) / nsamples
-
     return K
 
 
@@ -151,5 +141,4 @@ def approximate_angular_kernel(x, z, M, w=None, **kwargs):
         Mx = multiply(Mx)
         Mz = multiply(Mz)
     K = np.dot(Mx.T, Mz) / nsamples
-
     return K

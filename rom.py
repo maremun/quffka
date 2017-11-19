@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 #   encoding: utf-8
 #   rom.py
-
-
+# TODO documentation!
 import numpy as np
-from utils import get_d0, rnsimp, radius, butterfly_params
-from butterfly import butterfly
-#from scipy.stats import chi
-from numba import jit
+
 from math import sqrt
+from numba import jit
+
+from basics import get_d0, rnsimp, radius
+from butterfly import butterfly, butterfly_params
+
 
 @jit(nopython=True)
 def hadamard(n):
@@ -29,7 +30,6 @@ def hadamard(n):
         H[:p, p:2*p] = H[:p, :p]
         H[p:2*p, :p] = H[:p, :p]
         H[p:2*p, p:2*p] = -H[:p, :p]
-
     H /= sqrt(n)
     return H
 
@@ -42,7 +42,6 @@ def diagonal(n):
     '''
     d = (np.random.randint(0, 2, size=n) - 0.5) * 2
     D = np.diag(d)
-
     return D
 
 
@@ -77,7 +76,6 @@ def generate_rademacher_weights(k, n, p=3):
     i = t-1
     M[i*n:, :] = single(p, n)[:d0 - i*n, :]
     M = np.sqrt(n) * M[:d0, :]
-
     return M, None
 
 
@@ -94,7 +92,6 @@ def generate_gort_weights(k, n):
     d = np.sqrt(2 * np.random.gamma(d0/2., 1., d0))
     for i in range(Q.shape[0]):
         Q[i, :] *= d[i]
-
     return Q, None
 
 
@@ -136,7 +133,6 @@ def generate_but_weights(k, n):
     i = t-1
     M[i*n:, :] = butterfly(n, cos[i], sin[i], perm[i])[0][:d0 - i*n, :]
     M = np.sqrt(n) * M[:d0, :]
-
     return M, None
 
 
