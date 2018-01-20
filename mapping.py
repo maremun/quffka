@@ -5,6 +5,8 @@
 # TODO No other method except quadrature-based does not use weights. Quadrature
 # based is used via batch matvec function, so no point in using w here?
 
+# TODO fast_batch_approx_kernel should have kwargs to be able to receive kernel
+# hyperparameters
 import numpy as np
 
 from math import sqrt
