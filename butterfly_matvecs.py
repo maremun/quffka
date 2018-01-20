@@ -6,23 +6,23 @@ import numpy as np
 
 
 @jit(nopython=True)
-def factor_matvec(x, k, cos, sin):
+def factor_matvec(x, n, cos, sin):
     '''
-    Matvec for Q_k^T x, where k is the index number of k'th factor
+    Matvec for Q_n^T x, where n is the index number of n'th factor
         of butterfly matrix Q. Facilitates fast butterfly simplex weights
         multiplication by data vector:
-        [QV]^T x = V^T Q^T x = V^T Q_{log2(n)}^T ... q_0^T x
+        [QV]^T x = V^T Q^T x = V^T Q_{log2(d)}^T ... q_0^T x
 
     Args:
     =====
     x: data vector
-    k: the index number of k'th butterfly factor Q_k
+    n: the index number of n'th butterfly factor Q_n
     cos: cosines used to generate butterfly matrix Q
     sin: sines used to generate butterfly matrix Q
     '''
-    n = len(cos) + 1
+    d = len(cos) + 1
     N = x.shape[0]
-    blockn = 2**k
+    blockn = 2**n
     nblocks = int(np.ceil(N/blockn))
     step = blockn//2
     for i in range(nblocks - 1):
@@ -59,24 +59,24 @@ def factor_matvec(x, k, cos, sin):
     return x
 
 @jit(nopython=True)
-def batch_factor_matvec(x, k, cos, sin):
+def batch_factor_matvec(x, n, cos, sin):
     '''
-    Matvec for Q_k^T x, where k is the index number of k'th factor
+    Matvec for Q_n^T x, where n is the index number of n'th factor
         of butterfly matrix Q. Facilitates fast butterfly simplex weights
         multiplication by data vector:
-        [QV]^T x = V^T Q^T x = V^T Q_{log2(n)}^T ... Q_0^T x
+        [QV]^T x = V^T Q^T x = V^T Q_{log2(d)}^T ... Q_0^T x
 
     Args:
     =====
     x: a batch of data vectors
-    k: the index number of k'th butterfly factor Q_k
+    n: the index number of n'th butterfly factor Q_n
     cos: cosines used to generate butterfly matrix Q
     sin: sines used to generate butterfly matrix Q
     '''
     nobj = x.shape[1]
     N = x.shape[0]
-    n = len(cos) + 1
-    blockn = 2**k
+    d = len(cos) + 1
+    blockn = 2**n
     nblocks = int(np.ceil(N/blockn))
     r = np.copy(x)
     step = blockn//2
@@ -117,23 +117,23 @@ def batch_factor_matvec(x, k, cos, sin):
 
 @jit(nopython=True)
 def butterfly_matvec(x, cos, sin, p):
-    n = x.shape[0]
-    h = int(np.ceil(np.log2(n)))
+    d = x.shape[0]
+    h = int(np.ceil(np.log2(d)))
     for _ in range(NQ):
-        for k in range(1, h+1):
-            x = factor_matvec(x, k, cos, sin)
+        for n in range(1, h+1):
+            x = factor_matvec(x, n, cos, sin)
         x = x[p]
 
     return x
 
 @jit(nopython=True)
 def batch_butterfly_matvec(x, cos, sin, p):
-    n = x.shape[0]
-    h = int(np.ceil(np.log2(n)))
+    d = x.shape[0]
+    h = int(np.ceil(np.log2(d)))
 
     for _ in range(NQ):
-        for k in range(1, h+1):
-            x = batch_factor_matvec(x, k, cos, sin)
+        for n in range(1, h+1):
+            x = batch_factor_matvec(x, n, cos, sin)
         x = x[p, :]
 
     return x

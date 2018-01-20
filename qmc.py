@@ -5,7 +5,7 @@
 import ghalton
 import numpy as np
 
-from basics import get_d0
+from basics import get_D
 from lattice import lattice
 from scipy.stats import norm
 from sobol import i4_sobol_generate
@@ -13,24 +13,24 @@ from sobol import i4_sobol_generate
 EPS = 1e-6
 
 
-def generate_halton_weights(k, n):
-    d0 = get_d0(k, n)
-    sequencer = ghalton.GeneralizedHalton(n)
-    points = np.array(sequencer.get(d0))
+def generate_halton_weights(d, n):
+    D = get_D(d, n)
+    sequencer = ghalton.GeneralizedHalton(d)
+    points = np.array(sequencer.get(D))
     M = norm.ppf(points)
     return M, None
 
 
-def generate_lattice_weights(k, n):
-    d0 = get_d0(k, n)
-    z = lattice[:n]
-    points = (np.outer(range(d0), z) % d0) / d0 + EPS
+def generate_lattice_weights(d, n):
+    D = get_D(d, n)
+    z = lattice[:d]
+    points = (np.outer(range(D), z) % D) / D + EPS
     M = norm.ppf(points)
     return M, None
 
 
-def generate_sobol_weights(k, n):
-    d0 = get_d0(k, n)
-    points = np.float64(i4_sobol_generate(n, d0, 0)) + EPS
+def generate_sobol_weights(d, n):
+    D = get_D(d, n)
+    points = np.float64(i4_sobol_generate(d, D, 0)) + EPS
     M = norm.ppf(points).T
     return M, None

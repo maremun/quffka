@@ -7,7 +7,7 @@ import numpy as np
 from math import sqrt
 from numba import jit
 
-from basics import get_d0, rnsimp, radius
+from basics import get_D, rnsimp, radius
 from butterfly import butterfly, butterfly_params
 
 
@@ -57,82 +57,80 @@ def single(p, n):
 
 
 @jit(nopython=True)
-def generate_rademacher_weights(k, n, p=3):
+def generate_rademacher_weights(d, n, p=3):
     '''
     Generates n x n S-Rademacher random matrix as in
         https://arxiv.org/abs/1703.00864.
     '''
-    c = np.log2(n)
+    c = np.log2(d)
     f = np.floor(c)
-    d0 = get_d0(k, n)
+    D = get_D(d, n)
     if f != c:
-        n = int(2 ** (f + 1))
+        d = int(2 ** (f + 1))
 
-    M = np.zeros((d0, n))
+    M = np.zeros((D, d))
 
-    t = int(np.ceil(d0/n))
+    t = int(np.ceil(D/d))
     for i in range(t-1):
-        M[i*n:(i+1)*n, :] = single(p, n)
-    i = t-1
-    M[i*n:, :] = single(p, n)[:d0 - i*n, :]
-    M = np.sqrt(n) * M[:d0, :]
+        M[i*d:(i+1)*d, :] = single(p, d)
+    i = t - 1
+    M[i*d:, :] = single(p, d)[:D - i*d, :]
+    M = np.sqrt(d) * M[:D, :]
     return M, None
 
 
 @jit(nopython=True)
-def generate_gort_weights(k, n):
-    d0 = get_d0(k, n)
-    if d0 < n:
-        G = np.random.randn(n, d0)
+def generate_gort_weights(d, n):
+    D = get_D(d, n)
+    if D < d:
+        G = np.random.randn(d, D)
         Q, _ = np.linalg.qr(G)
         Q = Q.T
     else:
-        G = np.random.randn(d0, n)
+        G = np.random.randn(D, d)
         Q, _ = np.linalg.qr(G)
-    d = np.sqrt(2 * np.random.gamma(d0/2., 1., d0))
+    d = np.sqrt(2 * np.random.gamma(D/2., 1., D))
     for i in range(Q.shape[0]):
         Q[i, :] *= d[i]
     return Q, None
 
 
-def generate_rsimplex_weights(k, n, r=None):
-    d0 = get_d0(k, n)
-    k = int(np.ceil(d0 / 2 / (n+1)))
+def generate_rsimplex_weights(d, n, r=None):
+    D = get_D(d, n)
+    n = int(np.ceil(D/2/(d+1)))
     if r is None:
-        r = radius(n, k)
-    S = rnsimp(n)
-    Mp = single(3, n)
+        r = radius(d, n)
+    S = rnsimp(d)
+    Mp = single(3, d)
     M = np.dot(Mp, S).T
-    for i in range(1, k):
-        Mp = single(3, n)
+    for i in range(1, n):
+        Mp = single(3, d)
         L = np.dot(Mp, S)
         M = np.vstack((M, L.T))
-    mp = n + 1
+    mp = d + 1
     r = np.repeat(r, mp)
     M = np.einsum('i,ij->ij', r, M)
     M = np.vstack((M, -M))
-    w = sqrt(n) / r
+    w = sqrt(d) / r
     w = np.concatenate((w, w))
-    return M[:d0, :], w[:d0]
+    return M[:D, :], w[:D]
 
 
-def generate_but_weights(k, n):
+def generate_but_weights(d, n):
     '''
     '''
-    c = np.log2(n)
+    c = np.log2(d)
     f = np.floor(c)
-    d0 = get_d0(k, n)
+    D = get_D(d, n)
     if f != c:
-        n = int(2 ** (f+1))
-    t = int(np.ceil(d0/n))
-    cos, sin, perm = butterfly_params(n, t)
-    M = np.zeros((d0, n))
+        n = int(2**(f+1))
+    t = int(np.ceil(D/d))
+    cos, sin, perm = butterfly_params(d, t)
+    M = np.zeros((D, d))
 
     for i in range(t-1):
-        M[i*n:(i+1)*n, :] = butterfly(n, cos[i], sin[i], perm[i])[0]
-    i = t-1
-    M[i*n:, :] = butterfly(n, cos[i], sin[i], perm[i])[0][:d0 - i*n, :]
-    M = np.sqrt(n) * M[:d0, :]
+        M[i*d:(i+1)*d, :] = butterfly(d, cos[i], sin[i], perm[i])[0]
+    i = t - 1
+    M[i*d:, :] = butterfly(d, cos[i], sin[i], perm[i])[0][:D - i*d, :]
+    M = np.sqrt(d) * M[:D, :]
     return M, None
-
-

@@ -230,42 +230,27 @@ def butterfly_transform(S, cos, sin, perm):
 
 
 #@jit(nopython=True)
-def generate_butterfly_weights(k, n, r=None, b_params=None, even=False):
-    d0 = get_d0(k, n)
+def generate_butterfly_weights(d, n, r=None, b_params=None, even=False):
+    D = get_D(d, n)
     if even:
-        t = int(np.ceil(2*k))
+        t = int(np.ceil(2*n))
     else:
-        t = int(np.ceil(k))
+        t = int(np.ceil(n))
     if r is None:
-        r = radius(n, k)
+        r = radius(d, n)
     if b_params is None:
-        b_params = butterfly_params(n, k)
+        b_params = butterfly_params(d, n)
     S = rnsimp(n)
     cos, sin, perm = b_params
     M = butterfly_transform(S, cos[0], sin[0], perm[0]).T
     for i in range(1, t):
         L = butterfly_transform(S, cos[i], sin[i], perm[i])
         M = np.vstack((M, L.T))
-    mp = n + 1
+    mp = d + 1
     r = np.repeat(r, mp)
     M = np.einsum('i,ij->ij', r, M)
-    w = sqrt(n) / r
+    w = sqrt(d) / r
     if even is False:
         M = np.vstack((M, -M))
         w = np.concatenate((w, w))
-    return M[:d0, :], w[:d0]
-
-
-def generate_orthogonal_weights(k, n):
-    d0 = get_d0(k, n)
-    t = int(np.ceil(d0/n))
-    Q, _ = butterfly(n)
-    d = chi.rvs(n, size=n)
-    S = np.diag(d)
-    M = S.dot(Q)
-    for _ in range(t-1):
-        Q, _ = butterfly(n)
-        d = chi.rvs(n, size=n)
-        S = np.diag(d)
-        M = np.vstack((M, S.dot(Q)))
-    return M[:d0, :], None
+    return M[:D, :], w[:D]

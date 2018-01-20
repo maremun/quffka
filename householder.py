@@ -1,60 +1,61 @@
 #   econding: utf-8
 #   householder.py
 # TODO documentation!
-from math import sqrt
 import numpy as np
 
-from basics import get_d0
+from math import sqrt
+
+from basics import get_D
 
 
 @jit(nopython=True)
 def householder_reflect(S):
-    n = S.shape[0]
-    X = np.random.randn(n, n)
+    d = S.shape[0]
+    X = np.random.randn(d, d)
     X /= np.linalg.norm(X)
     Q = np.linalg.qr(X)[0]
     return np.dot(Q, S)
 
 
-def generate_householder_weights(k, n, r=None, even=False):
-    d0 = get_d0(k, n)
-    M = np.empty((d0, n))
+def generate_householder_weights(d, n, r=None, even=False):
+    D = get_D(d, n)
+    M = np.empty((D, n))
     if even:
-        t = int(np.ceil(2*k))
+        t = int(np.ceil(2*n))
     else:
-        t = int(np.ceil(k))
+        t = int(np.ceil(n))
     if r is None:
-        r = radius(n, t)
+        r = radius(d, t)
 
-    w = np.empty(d0)
-    S = rnsimp(n)
+    w = np.empty(D)
+    S = rnsimp(d)
 
-    if k < 1:
-        if k > 0.5:
-            M[:n+1, :] = r[0] * householder_reflect(S).T
-            w[:] = sqrt(n) / r[0]
+    if n < 1:
+        if n > 0.5:
+            M[:d+1, :] = r[0] * householder_reflect(S).T
+            w[:] = sqrt(d) / r[0]
             if even:
-                M[n+1:, :] = r[1] * householder_reflect(S).T[:d0-(n+1), :]
-                w[n+1:] = sqrt(n) / r[1]
+                M[d+1:, :] = r[1] * householder_reflect(S).T[:D-(d+1), :]
+                w[d+1:] = sqrt(d) / r[1]
             else:
-                M[n+1:, :] = -M[:d0-(n+1), :]
+                M[d+1:, :] = -M[:D-(d+1), :]
         else:
-            M = r[0] * householder_reflect(S).T[:d0, :]
-            w[:] = sqrt(n) / r[0]
+            M = r[0] * householder_reflect(S).T[:D, :]
+            w[:] = sqrt(d) / r[0]
         return M, w
 
     if even:
         for i in range(t-1):
-            M[i*(n+1):(i+1)*(n+1), :] = r[i] * householder_reflect(S).T
-            w[i*(n+1):(i+1)*(n+1)] = sqrt(n) / r[i]
+            M[i*(d+1):(i+1)*(d+1), :] = r[i] * householder_reflect(S).T
+            w[i*(d+1):(i+1)*(d+1)] = sqrt(d) / r[i]
         i = t-1
-        M[i*(n+1):, :] = r[i] * householder_reflect(S).T[:d0-(t-1)*(n+1)]
-        w[i*(n+1):] = sqrt(n) / r[i]
+        M[i*(d+1):, :] = r[i] * householder_reflect(S).T[:D-(t-1)*(d+1)]
+        w[i*(d+1):] = sqrt(d) / r[i]
     else:
         for i in range(t):
-            M[i*(n+1):(i+1)*(n+1), :] = r[i] * householder_reflect(S).T
-            w[i*(n+1):(i+1)*(n+1)] = sqrt(n) / r[i]
-        div = t*(n+1)
-        M[div:, :] = -M[:d0-div, :]
-        w[div:] = w[:d0-div]
+            M[i*(d+1):(i+1)*(d+1), :] = r[i] * householder_reflect(S).T
+            w[i*(d+1):(i+1)*(d+1)] = sqrt(d) / r[i]
+        div = t*(d+1)
+        M[div:, :] = -M[:D-div, :]
+        w[div:] = w[:D-div]
     return M, w
