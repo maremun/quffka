@@ -6,9 +6,10 @@ import numpy as np
 
 from math import sqrt
 
-from basics import pad_data
+from mapping import dense_map_data
 
 
+# ARC-COSINE
 def calculate_theta(x, z):
     nx = np.sqrt(np.einsum('ij,ij->i', x, x))
     nz = np.sqrt(np.einsum('ij,ij->i', z, z))
@@ -27,18 +28,13 @@ def arccos1_kernel(x, z):
 
 
 def approximate_arccos1_kernel(x, z, M, w=None, **kwargs):
-    nsamples = M.shape[0]
-    n = x.shape[1]
-    d1 = M.shape[1]
-    if d1 > n:
-        x, z = pad_data(x, z, d1, n)
-    Mx = np.maximum(np.dot(M, x.T), 0)
-    Mz = np.maximum(np.dot(M, z.T), 0)
-    if w is not None:
-        multiply = lambda z: np.einsum('i,ij->ij', w, z)
-        Mx = multiply(Mx)
-        Mz = multiply(Mz)
-    K = 2 * np.dot(Mx.T, Mz) / nsamples
+    D = M.shape[0]
+    f = lambda Mx: np.maximum(Mx, 0.)
+
+    Mx = map_data(x, M, w, f)
+    Mz = map_data(z, M, w, f)
+    K = 2. * np.dot(Mx.T, Mz) / D
+
     return K
 
 
@@ -48,97 +44,70 @@ def arccos0_kernel(x, z):
 
 
 def approximate_arccos0_kernel(x, z, M, w=None, **kwargs):
-    nsamples = M.shape[0]
-    n = x.shape[1]
-    d1 = M.shape[1]
-    if d1 > n:
-        x, z = pad_data(x, z, d1, n)
-    Mx = np.heaviside(np.dot(M, x.T), 0.5)
-    Mz = np.heaviside(np.dot(M, z.T), 0.5)
+    D = M.shape[0]
+    f = lambda Mx: np.heaviside(Mx, 0.5)
+
+    Mx = map_data(x, M, w, f)
+    Mz = map_data(z, M, w, f)
+    K = 2 * np.dot(Mx.T, Mz) / D
     if w is not None:
-        multiply = lambda z: np.einsum('i,ij->ij', w, z)
-        Mx = multiply(Mx)
-        Mz = multiply(Mz)
-    K = 2 * np.dot(Mx.T, Mz) / nsamples
-    if w is not None:
-        K += 0.5 * (1 - np.mean(np.power(w, 2)))
+        K += 0.5 * (1. - np.mean(np.power(w, 2)))
+
     return K
 
 
+# GAUSSIAN kernel
 def approximate_rbf_kernel(x, z, M, w=None, **kwargs):
     '''
     gamma: from kernel params
     '''
-    nsamples = M.shape[0] # output dimesion
-    n = x.shape[1] # input dimension
-    d1 = M.shape[1]
-    if d1 > n:
-        x, z = pad_data(x, z, d1, n)
+    D = M.shape[0]
     if 'gamma' in kwargs:
         gamma = kwargs['gamma']
     else:
         gamma = 1. / n
-    gamma = 1. / n
-
-    sigma = 1.0 / sqrt(2 * gamma)
-    def get_rbf_fourier_features(M, x, ww=None):
-        Mx = M.dot(x.T) / sigma
-        features = np.vstack((np.cos(Mx),
-                              np.sin(Mx)))
-
-        if ww is not None:
-            features = np.einsum('i,ij->ij', ww, features)
-        return features
-
+    sigma = 1. / sqrt(2. * gamma)
+    xs = x / sigma
+    zs = z / sigma
     ww = None
     if w is not None:
         ww = np.concatenate((w, w))
-    Mx = get_rbf_fourier_features(M, x, ww)
-    Mz = get_rbf_fourier_features(M, z, ww)
-    K = Mx.T.dot(Mz) / nsamples
+    f = lambda Mx: np.vstack((np.cos(Mx), np.sin(Mx))) 
+
+    Mx = map_data(xs, M, ww, f)
+    Mz = map_data(zs, M, ww, f)
+    K = Mx.T.dot(Mz) / D
     if w is not None:
-        K += 1 - np.mean(np.power(w, 2))
+        K += 1. - np.mean(np.power(w, 2))
+
     return K
 
 
+# LINEAR kernel (Gram matrix)
 def linear_kernel(x, z):
     K = x.dot(z.T)
     return K
 
 
 def approximate_linear_kernel(x, z, M, w=None, **kwargs):
-    nsamples = M.shape[0]
-    n = x.shape[1]
-    d1 = M.shape[1]
-    if d1 > n:
-        x, z = pad_data(x, z, d1, n)
-    Mx = M.dot(x.T)
-    Mz = M.dot(z.T)
-    if w is not None:
-        multiply = lambda z: np.einsum('i,ij->ij', np.sqrt(w), z)
-        Mx = multiply(Mx)
-        Mz = multiply(Mz)
+    D = M.shape[0]
+    MX = map_data(x, M, w, None)
+    MZ = map_data(z, M, w, None)
+    K = np.dot(Mx.T, Mz) / D
 
-    K = np.dot(Mx.T, Mz) / nsamples
     return K
 
 
+# ANGULAR kernel
 def angular_kernel(x, z):
     theta, _ = calculate_theta(x, z)
     return 1. - 2 * theta/np.pi
 
 
 def approximate_angular_kernel(x, z, M, w=None, **kwargs):
-    nsamples = M.shape[0]
-    n = x.shape[1]
-    d1 = M.shape[1]
-    if d1 > n:
-        x, z = pad_data(x, z, d1, n)
-    Mx = np.sign(np.dot(M, x.T))
-    Mz = np.sign(np.dot(M, z.T))
-    if w is not None:
-        multiply = lambda z: np.einsum('i,ij->ij', w, z)
-        Mx = multiply(Mx)
-        Mz = multiply(Mz)
-    K = np.dot(Mx.T, Mz) / nsamples
+    D = M.shape[0]
+    MX = map_data(x, M, w, np.sign)
+    MZ = map_data(z, M, w, np.sign)
+    K = np.dot(Mx.T, Mz) / D
+
     return K
