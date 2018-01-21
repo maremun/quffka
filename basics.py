@@ -29,9 +29,10 @@ def radius(d, n):
 def get_D(d, n):
     '''
     when using simplex method to generate points, we add also reflected ones,
-    so the overall number of points created is 2 * (n+1).
+    so the overall number of points created is 2 * (n+1) + 1, where 1 comes
+    from the weight of function at zero.
     '''
-    D = int(2 * n * (d+1))
+    D = int(n * (2 * (d+1) + 1))
     return D
 
 
