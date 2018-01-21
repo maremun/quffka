@@ -18,7 +18,7 @@ from butterfly import butterfly_params
 from butterfly_matvecs import batch_butterfly_matvec, butterfly_matvec
 
 
-def dense_map_data(x, M, w, f):
+def map_data(x, M, w, f):
     d1 = M.shape[1]
     d = x.shape[1]
     if d1 > d:
@@ -74,37 +74,51 @@ def fast_batch_mapping_matvec(x, n, r=None, b_params=None, even=False):
     #TODO fix this case when generating for rbf-like kernels
     if n < 1:
         if n > 0.5:
-            Mx[:d+1, :] = r[0] * get_batch_mx(x, cos[0], sin[0], perm[0])
-            w[:] = sqrt(d) / r[0]
+            Mx[0, :] = 0
+            w[0] = sqrt(1 - d / r[0]**2)
+# TODO check indexing! d+1?
+            Mx[1:d+2, :] = r[0] * get_batch_mx(x, cos[0], sin[0], perm[0])
+            w[1:] = sqrt(d) / r[0]
             if even:
-                Mx[d+1:, :] = r[1] * get_batch_mx(x, cos[1], sin[1],
+                Mx[d+2:, :] = r[1] * get_batch_mx(x, cos[1], sin[1],
                                                   perm[1])[D-(d+1), :]
-                w[d+1:] = sqrt(d) / r[1]
+                w[d+2:] = sqrt(d) / r[1]
             else:
-                Mx[d+1:, :] = -Mx[:D-(d+1), :]
+                Mx[d+2:, :] = -Mx[:D-(d+1), :]
         else:
-            Mx = r[0] * get_batch_mx(x, cos[0], sin[0], perm[0])[:D, :]
-            w[:] = sqrt(d) / r[0]
+            Mx[0, :] = 0
+            w[0] = sqrt(1 - d / r[0]**2)
+            Mx[1:, :] = r[0] * get_batch_mx(x, cos[0], sin[0], perm[0])[:D, :]
+            w[1:] = sqrt(d) / r[0]
+
         return Mx, w
 
     if even:
         for i in range(t-1):
-            w[i*(d+1):(i+1)*(d+1)] = sqrt(d) / r[i]
-            Mx[i*(d+1):(i+1)*(d+1), :] = \
+            w[i*(d+2)] = sqrt(1 - d / r[i]**2)
+            Mx[i*(d+2), :] = 0
+            w[i*(d+2)+1:(i+1)*(d+2)] = sqrt(d) / r[i]
+            Mx[i*(d+2)+1:(i+1)*(d+2), :] = \
                     r[i] * get_batch_mx(x, cos[i], sin[i], perm[i])
-            i = t - 1
-            Mx[i*(d+1):, :] = r[i] * get_batch_mx(x, cos[i], sin[i],
-                                                  perm[i])
-            w[i*(d+1):] = sqrt(d) / r[i]
+        i = t - 1
+        w[i*(d+2):] = sqrt(1 - d / r[i]**2)
+        Mx[i*(d+2), :] = 1
+        Mx[i*(d+2)+1:, :] = r[i] * get_batch_mx(x, cos[i], sin[i],
+                                              perm[i])
+        w[i*(d+2)+1:] = sqrt(d) / r[i]
 
     else:
         for i in range(t):
-            w[i*(d+1):(i+1)*(d+1)] = sqrt(d) / r[i]
-            Mx[i*(d+1):(i+1)*(d+1), :] = \
+            w[i*(d+2)] = sqrt(1 - d / r[i]**2)
+            Mx[i*(d+2), :] = 0
+            w[i*(d+2)+1:(i+1)*(d+2)] = sqrt(d) / r[i]
+            Mx[i*(d+2)+1:(i+1)*(d+2), :] = \
                     r[i] * get_batch_mx(x, cos[i], sin[i], perm[i])
-        div = t*(d+1)
-        Mx[div:, :] = -Mx[:D-div, :]
-        w[div:] = w[:D-div]
+        div = t*(d+2)+1
+        for i in range(t):
+            Mx[div+i*(d+2):div+(i+1)*(d+2), :] = -Mx[i*(d+2)+1:(i+1)*(d+2), :]
+            w[div+i*(d+2):div+(i+1)*(d+2)] = w[i*(d+2)+1:(i+1)*(d+2)]
+
     return Mx, w
 
 
@@ -150,7 +164,6 @@ def fast_batch_approx_arccos0(x, div, n, r, b_params, gamma=None):
     Mz = np.empty((Mx.shape[1] - div, Mx.shape[0]))
     Mz[:, :] = Mx[:, div:].T
     K = 2 * np.dot(Mxx, Mz.T) / D
-    K += 0.5 * (1 - np.mean(np.power(w, 2)))
     return K
 
 
@@ -184,7 +197,6 @@ def fast_batch_approx_rbf(x, div, n, r, b_params, gamma=None):
     MZ = np.empty((features.shape[1] - div, features.shape[0]))
     MZ[:, :] = features[:, div:].T
     K = np.dot(MX, MZ.T) / D
-    K += 1. - np.mean(np.power(w, 2))
     return K
 
 
@@ -222,82 +234,4 @@ def fast_batch_approx_linear(x, div, n, r, b_params):
     Mz = np.empty((Mx.shape[1] - div, Mx.shape[0]))
     Mz[:, :] = Mx[:, div:].T
     K = np.dot(Mxx, Mz.T) / D
-    return K
-
-
-@jit(nopython=True)
-def get_mx(x, cos, sin, p):
-    b = butterfly_matvec(x, cos, sin, p)
-    Mx = simplex_matvec(b)
-    return Mx
-
-
-@jit(nopython=True)
-def fast_mapping_matvec(x, n, r, cos, sin, p):
-    '''
-              |V^T Q_0^T x|
-    Mx = \rho |    ...    |
-              |V^T Q_n^T x|
-    Args:
-    =====
-    x: the data vector of size n.
-    n: the parameter defining the new number of features.
-
-    Returns:
-    ========
-    Mx: the mapping Mx.
-    w: the weights.
-    '''
-    d = x.shape[0]
-    D = get_D(d, n)
-    Mx = np.empty((D,))
-    if n < 1:
-        if n >= 0.5:
-            Mx[:d+1] = r[0] * get_mx(x, cos[0, :], sin[0, :], p[0, :])
-            Mx[d+1:] = -Mx[:D-(d+1)]
-        else:
-            Mx = r[0] * get_mx(x, cos[0, :], sin[0, :], p[0, :])[:D]
-        # TODO check out w
-        w = np.ones(D) * sqrt(d) / r[0]
-        return Mx, w
-
-    n = int(np.ceil(n))
-    w = np.empty(D)
-    for i in range(n):
-        w[i*(d+1):(i+1)*(d+1)] = sqrt(d) / r[i]
-        Mx[i*(d+1):(i+1)*(d+1)] = \
-                r[i] * get_mx(x, cos[i, :], sin[i, :], p[i, :])
-    div = n*(d+1)
-    Mx[div:] = -Mx[:D-div]
-    w[div:] = w[:D-div]
-    return Mx, w
-
-
-@jit(nopython=True)
-def fast_approx_arccos(x, z, n, r=None, b_params=None):
-    d = x.shape[1]
-    nobjx = x.shape[0]
-    nobjz = z.shape[0]
-    D = get_D(d, n)
-    if n != int(np.ceil(n)):
-        D -= 1
-    Mx = np.empty((nobjx, D))
-    Mz = np.empty((nobjz, D))
-
-    Mx[0, :], w = fast_mapping_matvec(x[0, :], n, r, b_params)
-    for i in range(1, nobjx):
-        Mx[i, :] = fast_mapping_matvec(x[i, :], n, r, b_params)[0]
-
-    Mz[0, :] = fast_mapping_matvec(z[0, :], n, r, b_params)[0]
-    for i in range(1, nobjz):
-        Mz[i, :] = fast_mapping_matvec(z[i, :], n, r, b_params)[0]
-
-    Mx = np.maximum(Mx, 0)
-    Mz = np.maximum(Mz, 0)
-
-    for i in range(D):
-        Mx[:, i] *= w[i]
-        Mz[:, i] *= w[i]
-
-    K = 2 * np.dot(Mx, Mz.T) / D
     return K
