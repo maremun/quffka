@@ -20,6 +20,8 @@ def radius(d, n):
     h = int(np.ceil(n))
     rm = d + 2
     r = np.sqrt(2 * np.random.gamma(rm/2., 1., h))
+    while 1 - (d / np.mean(np.power(r, 2))) < 0:
+        r = np.sqrt(2 * np.random.gamma(rm/2., 1., h))
     return r
 
 
