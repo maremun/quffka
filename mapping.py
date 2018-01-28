@@ -18,21 +18,6 @@ from butterfly import butterfly_params
 from butterfly_matvecs import batch_butterfly_matvec, butterfly_matvec
 
 
-def map_data(x, M, w, f):
-    d1 = M.shape[1]
-    d = x.shape[1]
-    if d1 > d:
-        x = pad_data(x, d1, d)
-
-    Mx = np.dot(M, x.T)
-    if f is not None:
-        Mx = f(Mx)
-    if w is not None:
-        multiply = lambda z: np.einsum('i,ij->ij', w, z)
-        Mx = multiply(Mx)
-
-    return Mx
-
 @jit(nopython=True)
 def get_batch_mx(x, cos, sin, perm):
     b = batch_butterfly_matvec(x, cos, sin, perm)
@@ -41,7 +26,7 @@ def get_batch_mx(x, cos, sin, perm):
 
 
 @jit(nopython=True)
-def fast_batch_mapping_matvec(x, n, r=None, b_params=None, even=False):
+def butt_quad_mapping(x, n, r=None, b_params=None, even=False):
     '''
               |V^T Q_0^T x|
     Mx = \rho |    ...    |
@@ -120,118 +105,3 @@ def fast_batch_mapping_matvec(x, n, r=None, b_params=None, even=False):
             w[div+i*(d+2):div+(i+1)*(d+2)] = w[i*(d+2)+1:(i+1)*(d+2)]
 
     return Mx, w
-
-
-@jit(nopython=True)
-def fast_batch_approx_arccos1(x, div, n, r, b_params, gamma=None):
-    d = x.shape[0]
-    D = get_D(d, n)
-
-    Mx, w = fast_batch_mapping_matvec(x, n, r, b_params, False)
-    Mx = np.maximum(Mx, 0)
-    for i in range(D):
-        Mx[i, :] *= w[i]
-
-    Mxx = np.empty((div, Mx.shape[0]))
-    Mxx[:, :] = Mx[:, :div].T
-
-    Mz = np.empty((Mx.shape[1] - div, Mx.shape[0]))
-    Mz[:, :] = Mx[:, div:].T
-    K = 2 * np.dot(Mxx, Mz.T) / D
-    return K
-
-
-@jit(nopython=True)
-def fast_batch_approx_arccos0(x, div, n, r, b_params, gamma=None):
-    d = x.shape[0]
-    D = get_D(d, n)
-
-    Mx, w = fast_batch_mapping_matvec(x, n, r, b_params, True)
-    for i in range(Mx.shape[0]):
-        for j in range(Mx.shape[1]):
-            if Mx[i, j] > 0.:
-                Mx[i, j] = 1.
-            elif Mx[i, j] == 0.:
-                Mx[i, j] = 0.5
-            elif Mx[i, j] < 0.:
-                Mx[i, j] = 0.
-    for i in range(D):
-        Mx[i, :] *= w[i]
-
-    Mxx = np.empty((div, Mx.shape[0]))
-    Mxx[:, :] = Mx[:, :div].T
-
-    Mz = np.empty((Mx.shape[1] - div, Mx.shape[0]))
-    Mz[:, :] = Mx[:, div:].T
-    K = 2 * np.dot(Mxx, Mz.T) / D
-    return K
-
-
-@jit(nopython=True)
-def fast_batch_approx_rbf(x, div, n, r, b_params, gamma=None):
-    '''
-    Args
-    x: data matrix (stacked X and Y, eg. test + train)
-    div: X.shape[0]
-    '''
-    d = x.shape[0] # input dimension
-    nobj = x.shape[1] # number of objects
-    D = get_D(d, n) # output dimension
-    if gamma is None:
-        gamma = 1. / d
-    gamma = 1. / d
-    sigma = 1.0 / sqrt(2. * gamma)
-    Mx, w = fast_batch_mapping_matvec(x, n, r, b_params, True)
-    Mx /= sigma
-    features = np.empty((2 * D, nobj))
-    features[:D, :] = np.cos(Mx)
-    features[D:, :] = np.sin(Mx)
-
-    for i in range(D):
-        features[i, :] *= w[i]
-        features[D + i, :] *= w[i]
-
-    MX = np.empty((div, features.shape[0]))
-    MX[:, :] = features[:, :div].T
-
-    MZ = np.empty((features.shape[1] - div, features.shape[0]))
-    MZ[:, :] = features[:, div:].T
-    K = np.dot(MX, MZ.T) / D
-    return K
-
-
-@jit(nopython=True)
-def fast_batch_approx_angular(x, div, n, r, b_params, gamma=None):
-    d = x.shape[0]
-    D = get_D(d, n)
-
-    Mx, w = fast_batch_mapping_matvec(x, n, r, b_params, True)
-    Mx = np.sign(Mx)
-    for i in range(D):
-        Mx[i, :] *= w[i]
-
-    Mxx = np.empty((div, Mx.shape[0]))
-    Mxx[:, :] = Mx[:, :div].T
-
-    Mz = np.empty((Mx.shape[1] - div, Mx.shape[0]))
-    Mz[:, :] = Mx[:, div:].T
-    K = np.dot(Mxx, Mz.T) / D
-    return K
-
-
-@jit(nopython=True)
-def fast_batch_approx_linear(x, div, n, r, b_params):
-    d = x.shape[0]
-    D = get_D(d, n)
-    Mx, w = fast_batch_mapping_matvec(x, n, r, b_params, False)
-    for i in range(D):
-        Mx[i, :] *= w[i]
-
-    # TODO make arrays that are used in dot product C-contiguous
-    Mxx = np.empty((div, Mx.shape[0]))
-    Mxx[:, :] = Mx[:, :div].T
-
-    Mz = np.empty((Mx.shape[1] - div, Mx.shape[0]))
-    Mz[:, :] = Mx[:, div:].T
-    K = np.dot(Mxx, Mz.T) / D
-    return K
