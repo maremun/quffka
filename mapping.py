@@ -12,10 +12,9 @@ import numpy as np
 from math import sqrt
 from numba import jit
 
-from basics import get_D, batch_simplex_matvec, pad_data, radius, \
-        simplex_matvec
+from basics import batch_simplex_matvec, get_D, radius
 from butterfly import butterfly_params
-from butterfly_matvecs import batch_butterfly_matvec, butterfly_matvec
+from butterfly_matvecs import batch_butterfly_matvec
 
 
 @jit(nopython=True)
