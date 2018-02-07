@@ -4,6 +4,10 @@
 
 import numpy as np
 
+from numba import jit
+
+NQ = 3
+
 
 @jit(nopython=True)
 def batch_factor_matvec(x, n, cos, sin):
