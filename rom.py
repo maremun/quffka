@@ -80,7 +80,7 @@ def generate_rademacher_weights(d, n, p=3):
 
 
 @jit(nopython=True)
-def generate_gort_weights(d, n):
+def generate_orthogonal_weights(d, n):
     D = get_D(d, n)
     if D < d:
         G = np.random.randn(d, D)
