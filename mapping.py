@@ -86,7 +86,7 @@ def butt_quad_mapping(x, n, r=None, b_params=None, even=False):
                     r[i] * get_batch_mx(x, cos[i], sin[i], perm[i])
         i = t - 1
         w[i*(d+2):] = sqrt(1 - d / r[i]**2)
-        Mx[i*(d+2), :] = 1
+        Mx[i*(d+2), :] = 0
         Mx[i*(d+2)+1:, :] = r[i] * get_batch_mx(x, cos[i], sin[i],
                                               perm[i])
         w[i*(d+2)+1:] = sqrt(d) / r[i]
@@ -98,9 +98,9 @@ def butt_quad_mapping(x, n, r=None, b_params=None, even=False):
             w[i*(d+2)+1:(i+1)*(d+2)] = sqrt(d) / r[i]
             Mx[i*(d+2)+1:(i+1)*(d+2), :] = \
                     r[i] * get_batch_mx(x, cos[i], sin[i], perm[i])
-        div = t*(d+2)+1
+        div = t * (d+2)
         for i in range(t):
-            Mx[div+i*(d+2):div+(i+1)*(d+2), :] = -Mx[i*(d+2)+1:(i+1)*(d+2), :]
-            w[div+i*(d+2):div+(i+1)*(d+2)] = w[i*(d+2)+1:(i+1)*(d+2)]
+            Mx[div+i*(d+1):div+(i+1)*(d+1), :] = -Mx[i*(d+2)+1:(i+1)*(d+2), :]
+            w[div+i*(d+1):div+(i+1)*(d+1)] = w[i*(d+2)+1:(i+1)*(d+2)]
 
     return Mx, w
