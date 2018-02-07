@@ -19,11 +19,11 @@ from qmc import generate_halton_weights, generate_lattice_weights
 import matplotlib.pyplot as plt
 
 APPROX = OrderedDict({'exact': None,
-          #'G': [True, generate_random_weights],
+          'G': [True, generate_random_weights],
           #'Gort': [True, generate_orthogonal_weights],
           'ROM': [True, generate_rademacher_weights],
           #'H': [True, generate_householder_weights],
-          #'B dense': [True, generate_butterfly_weights],
+          'B dense': [True, generate_butterfly_weights],
           'B': [False, butt_quad_mapping]})
 KERNEL = OrderedDict({
              'RBF': rbf_kernel,
@@ -35,7 +35,7 @@ KERNEL_C = {'RBF': 1,
             'Linear': 1,
             'Angular': 1}
 KERNEL_B = {'RBF': lambda w: 1 - np.mean(np.power(w, 2)),
-            'Arccos 0': lambda w: 0.5 * (1 - np.mean(np.power(w, 2))),
+            'Arccos 0': lambda w: 0.25 * (1 - np.mean(np.power(w, 2))),
             'Arccos 1': lambda w: 0,
             'Linear': lambda w: 0,
             'Angular': lambda w: 0}
@@ -64,7 +64,7 @@ def kernel(X, Y, n, kernel_type, approx_type, **kwargs):
 
     if approx_type == 'exact':
         kernel = KERNEL[kernel_type]
-        K = kernel(Xc, Yc)
+        K = kernel(X, Y)
         return K
 
     D = get_D(d, n)
@@ -74,9 +74,11 @@ def kernel(X, Y, n, kernel_type, approx_type, **kwargs):
     Z = np.vstack((Xc, Yc))  # stack X and Y
     Mz, w = mapping(Z, n, kernel_type, approx_type)  # , **kwargs) input scaled
     Mx, My = np.split(Mz, [X.shape[0]], 0)
-    K = c * np.dot(Mx, My.T) / D
+    K = np.dot(Mx, My.T) / D
     if w is not None:
         K += b(w)
+
+    K *= c
 
     return K
 
