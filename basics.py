@@ -33,7 +33,7 @@ def get_D(d, n):
     so the overall number of points created is 2 * (n+1) + 1, where 1 comes
     from the weight of function at zero.
     '''
-    D = int(n * (2 * (d+1) + 1))
+    D = int(n * (2 * (d+1)))  # + 1))
     return D
 
 
