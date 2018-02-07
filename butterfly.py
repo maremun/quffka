@@ -9,6 +9,7 @@ from numba import jit
 from scipy.linalg import block_diag
 from scipy.stats import chi
 
+from basics import get_D, radius, rnsimp
 NQ = 3
 
 
@@ -240,7 +241,7 @@ def generate_butterfly_weights(d, n, r=None, b_params=None, even=False):
         r = radius(d, n)
     if b_params is None:
         b_params = butterfly_params(d, n)
-    S = rnsimp(n)
+    S = rnsimp(d)
     cos, sin, perm = b_params
     M = butterfly_transform(S, cos[0], sin[0], perm[0]).T
     for i in range(1, t):
