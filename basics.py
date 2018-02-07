@@ -19,9 +19,10 @@ def pad_data(x, d1, d):
 def radius(d, n):
     h = int(np.ceil(n))
     rm = d + 2
-    r = np.sqrt(2 * np.random.gamma(rm/2., 1., h))
-    while 1 - (d / np.mean(np.power(r, 2))) < 0:
-        r = np.sqrt(2 * np.random.gamma(rm/2., 1., h))
+    r = np.ones(h)
+    for i in range(h):
+        while 1 - (d / r[i]**2) < 0:
+            r[i] = np.sqrt(2 * np.random.gamma(rm/2., 1., 1))[0]
     return r
 
 
@@ -48,7 +49,7 @@ def generate_random_weights(d, n):
         M: the points to estimate integral with
         w: the weights of the points in M
     '''
-    D = get_D(n, d)
+    D = get_D(d, n)
     M = np.random.randn(D, d)
     w = None  # all points have equal weights
     return M, w
