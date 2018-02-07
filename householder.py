@@ -4,8 +4,9 @@
 import numpy as np
 
 from math import sqrt
+from numba import jit
 
-from basics import get_D
+from basics import get_D, radius, rnsimp
 
 
 @jit(nopython=True)
@@ -19,7 +20,7 @@ def householder_reflect(S):
 
 def generate_householder_weights(d, n, r=None, even=False):
     D = get_D(d, n)
-    M = np.empty((D, n))
+    M = np.empty((D, d))
     if even:
         t = int(np.ceil(2*n))
     else:
