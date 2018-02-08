@@ -8,23 +8,26 @@ from collections import OrderedDict
 from math import sqrt
 from sklearn.metrics.pairwise import rbf_kernel
 
-from basics import generate_random_weights, get_D
+from basics import generate_random_weights, get_D, pad_data
 from butterfly import generate_butterfly_weights
+from gq import generate_gq_weights
 from householder import generate_householder_weights
 from kernels import arccos0_kernel, arccos1_kernel
 from mapping import butt_quad_mapping
 from rom import generate_rademacher_weights, generate_orthogonal_weights
-from qmc import generate_halton_weights, generate_lattice_weights
+from qmc import generate_halton_weights
 
-import matplotlib.pyplot as plt
 
 APPROX = OrderedDict({'exact': None,
           'G': [True, generate_random_weights],
-          #'Gort': [True, generate_orthogonal_weights],
+          'Gort': [True, generate_orthogonal_weights],
           'ROM': [True, generate_rademacher_weights],
-          #'H': [True, generate_householder_weights],
+          'QMC': [True, generate_halton_weights],
+          'GQ': [True, generate_gq_weights],
           'B dense': [True, generate_butterfly_weights],
-          'B': [False, butt_quad_mapping]})
+          'B': [False, butt_quad_mapping]
+          #'H': [True, generate_householder_weights],
+          })
 KERNEL = OrderedDict({
              'RBF': rbf_kernel,
              'Arccos 0': arccos0_kernel,
@@ -74,9 +77,12 @@ def kernel(X, Y, n, kernel_type, approx_type, **kwargs):
     Z = np.vstack((Xc, Yc))  # stack X and Y
     Mz, w = mapping(Z, n, kernel_type, approx_type)  # , **kwargs) input scaled
     Mx, My = np.split(Mz, [X.shape[0]], 0)
-    K = np.dot(Mx, My.T) / D
-    if w is not None:
-        K += b(w)
+    K = np.dot(Mx, My.T)
+    if approx_type != 'GQ':
+        K /= D
+    if approx_type.startswith('B'):
+        if w is not None:
+            K += b(w)
 
     K *= c
 
@@ -89,7 +95,6 @@ def mapping(Z, n, kernel_type, approx_type, **kwargs):
     even = False
     if kernel_type == 'RBF':
         even = True
-
     if flag:
         d = Z.shape[1]
         if approx_type == 'B dense':
@@ -108,6 +113,8 @@ def mapping(Z, n, kernel_type, approx_type, **kwargs):
     if w is not None:
         if kernel_type == 'RBF':
             ww = np.concatenate((w, w))
-        MZ = np.einsum('j,ij->ij', ww, MZ)
+            MZ = np.einsum('j,ij->ij', ww, MZ)
+        else:
+            MZ = np.einsum('j,ij->ij', w, MZ)
 
     return MZ, w
