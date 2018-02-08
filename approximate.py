@@ -86,22 +86,28 @@ def kernel(X, Y, n, kernel_type, approx_type, **kwargs):
 def mapping(Z, n, kernel_type, approx_type, **kwargs):
     flag, f = APPROX[approx_type]
     non_linear = KERNEL_F[kernel_type]
+    even = False
+    if kernel_type == 'RBF':
+        even = True
 
     if flag:
         d = Z.shape[1]
-        M, w = f(d, n)
+        if approx_type == 'B dense':
+            M, w = f(d, n, even=even)
+        else:
+            M, w = f(d, n)
         d1 = M.shape[1]
         if d1 > d:
             Z = pad_data(Z, d1, d)
         MZ = np.dot(Z, M.T)
     else:
-        MZ, w = f(Z.T, n, **kwargs)
+        MZ, w = f(Z.T, n, even=even)
         MZ = MZ.T
 
     MZ = non_linear(MZ)
     if w is not None:
         if kernel_type == 'RBF':
-            w = np.concatenate((w, w))
-        MZ = np.einsum('j,ij->ij', w, MZ)
+            ww = np.concatenate((w, w))
+        MZ = np.einsum('j,ij->ij', ww, MZ)
 
     return MZ, w
