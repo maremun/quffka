@@ -238,9 +238,9 @@ def generate_butterfly_weights(d, n, r=None, b_params=None, even=False):
     else:
         t = int(np.ceil(n))
     if r is None:
-        r = radius(d, n)
+        r = radius(d, t)
     if b_params is None:
-        b_params = butterfly_params(d, n)
+        b_params = butterfly_params(d, t)
     S = rnsimp(d)
     cos, sin, perm = b_params
     M = butterfly_transform(S, cos[0], sin[0], perm[0]).T
