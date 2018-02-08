@@ -12,16 +12,16 @@ from butterfly import butterfly, butterfly_params
 
 
 @jit(nopython=True)
-def hadamard(n):
-    if n < 1:
+def hadamard(d):
+    if d < 1:
         lg2 = 0
     else:
-        lg2 = int(np.log2(n))
-    if 2 ** lg2 != n:
-        raise ValueError("n must be an positive integer, and n must be "
+        lg2 = int(np.log2(d))
+    if 2 ** lg2 != d:
+        raise ValueError("d must be an positive integer, and d must be "
                          "a power of 2")
 
-    H = np.zeros((n, n))
+    H = np.zeros((d, d))
     H[0, 0] = 1
 
     # Sylvester's construction
@@ -30,28 +30,28 @@ def hadamard(n):
         H[:p, p:2*p] = H[:p, :p]
         H[p:2*p, :p] = H[:p, :p]
         H[p:2*p, p:2*p] = -H[:p, :p]
-    H /= sqrt(n)
+    H /= sqrt(d)
     return H
 
 
 @jit(nopython=True)
-def diagonal(n):
+def diagonal(d):
     '''
     Generates diagonal matrix D if size n x n with iid Rademacher random
         variables on the diagonal.
     '''
-    d = (np.random.randint(0, 2, size=n) - 0.5) * 2
-    D = np.diag(d)
+    diag = (np.random.randint(0, 2, size=d) - 0.5) * 2
+    D = np.diag(diag)
     return D
 
 
 @jit(nopython=True)
-def single(p, n):
-    S = hadamard(n)
-    D = diagonal(n)
+def single(p, d):
+    S = hadamard(d)
+    D = diagonal(d)
     M = np.dot(S, D)
     for _ in range(p-1):
-        D = diagonal(n)
+        D = diagonal(d)
         M = np.dot(M, np.dot(S, D))
     return M
 
