@@ -6,6 +6,7 @@ import scipy.stats as st
 
 from matplotlib.ticker import LogFormatterMathtext, MaxNLocator, \
                               ScalarFormatter
+from os.path import join
 
 from dataset import PARAMS, DIMS
 
@@ -32,7 +33,7 @@ h = 6
 
 
 def plot_errors(errs_dic, datasets, kernels, approx_types, semilogy=False,
-                acc=False, exact=None, params=None):
+                acc=False, exact=None, params=None, save_to='paper_figures'):
     m = len(datasets)
     n = len(kernels)
     fig, axes = plt.subplots(ncols=m, nrows=n, figsize=(w*m, h))
@@ -128,13 +129,13 @@ def plot_errors(errs_dic, datasets, kernels, approx_types, semilogy=False,
         fig_type = 'semilogy'
     else:
         fig_type = 'plain'
-    plt.savefig('figures/check/final_%s_%s.pdf' % (filename, fig_type),
-                dpi=1200, format='pdf')
+    filepath = join(save_to, 'kernel_accuracy%s_%s' % (filename, fig_type))
+    plt.savefig(filepath, dpi=1200, format='pdf')
     plt.show()
     return fig
 
 
-def plot_time(times):
+def plot_time(times, save_to='paper_figures'):
     fig = plt.figure()
     for a, t in times.items():
         plt.semilogy(DIMS[1:], t[1:,:].mean(1), label=a,
@@ -149,7 +150,8 @@ def plot_time(times):
     left = 0.11
     bottom = 0.11
     fig.subplots_adjust(left=left, top=top, right=right,bottom=bottom)
-    plt.savefig('time.pdf', dpi=1200, format='pdf')
+    filepath = join(save_to, 'time.pdf')
+    plt.savefig(filepath, dpi=1200, format='pdf')
     plt.show()
     return fig
 
