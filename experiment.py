@@ -19,7 +19,6 @@ def relative_errors(X, Y, kernel_type, approx_types, start_deg=1, max_deg=2,
     errs = {}
     ranks = {}
     for approx_type in tqdm(approx_types):
-        print(approx_type)
         errs[approx_type] = np.zeros((steps, runs))
         ranks[approx_type] = np.zeros((steps, runs))
         if approx_type == 'exact':
