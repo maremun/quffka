@@ -57,7 +57,7 @@ def make_dataset(dataset_name, params=None):
     start_deg, max_deg, runs, shift, step, NSAMPLES, delimiter = params
 
     if dataset_name == 'MNIST':
-        mnist = input_data.read_data_sets("MNIST_data/", one_hot=False)
+        mnist = input_data.read_data_sets("datasets/MNIST_data/", one_hot=False)
         xtrain = mnist.train.images
         ytrain = mnist.train.labels
         xtest = mnist.test.images
