@@ -17,13 +17,9 @@ def pad_data(x, d1, d):
 
 @jit(nopython=True)
 def radius(d, n):
-    h = int(np.ceil(n))
     rm = d + 2
-    #r = np.ones(h)
-    #for i in range(h):
-    #    while 1 - (d / r[i]**2) < 0:
-    #        r[i] = np.sqrt(2 * np.random.gamma(rm/2., 1., 1))[0]
-    r = np.sqrt(2 * np.random.gamma(rm/2., 1., h))
+    D = int(get_D(d, n) / 2)
+    r = np.sqrt(2 * np.random.gamma(rm/2., 1., D))
     return r
 
 

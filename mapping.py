@@ -55,38 +55,57 @@ def butt_quad_mapping(x, n, r=None, b_params=None, even=False):
 
     w = np.empty(D)
     cos, sin, perm = b_params
-    #TODO fix this case when generating for rbf-like kernels
     if n < 1:
         if n > 0.5:
 # TODO check indexing! d+1?
-            Mx[:d+1, :] = r[0] * get_batch_mx(x, cos[0], sin[0], perm[0])
-            w[:] = sqrt(d) / r[0]
+            d0 = int(get_D(d, 1)/2)
+            rr = np.ones((d0,1))
+            rr[:, 0] = r[:d0]
+            Mx[:d+1, :] = rr * get_batch_mx(x, cos[0], sin[0], perm[0])
+            w[:] = sqrt(d) / rr[:, 0]
             if even:
-                Mx[d+1:, :] = r[1] * get_batch_mx(x, cos[1], sin[1],
-                                                  perm[1])[D-(d+1), :]
-                w[d+1:] = sqrt(d) / r[1]
+                dd = d0
+                d0 = r.shape[0]
+                rr = np.ones((d0-dd, 1))
+                rr[:, 0] = r[d0:]
+                Mx[d+1:, :] = rr * get_batch_mx(x, cos[1], sin[1],
+                                                perm[1])[D-(d+1), :]
+                w[d+1:] = sqrt(d) / rr[:, 0]
             else:
                 Mx[d+1:, :] = -Mx[:D-(d+1), :]
         else:
-            Mx[:, :] = r[0] * get_batch_mx(x, cos[0], sin[0], perm[0])[:D, :]
-            w[:] = sqrt(d) / r[0]
+            Mx[:, :] = r[:] * get_batch_mx(x, cos[0], sin[0], perm[0])[:D, :]
+            w[:] = sqrt(d) / r[:]
         return Mx, w
 
     if even:
+        dd = 0
         for i in range(t-1):
-            w[i*(d+1):(i+1)*(d+1)] = sqrt(d) / r[i]
+            d0 = int(get_D(d, i+1) / 2)
+            rr = np.ones((d0-dd, 1))
+            rr[:, 0] = r[dd:d0]
+            w[i*(d+1):(i+1)*(d+1)] = sqrt(d) / rr[:, 0]
             Mx[i*(d+1):(i+1)*(d+1), :] = \
-                    r[i] * get_batch_mx(x, cos[i], sin[i], perm[i])
+                    rr * get_batch_mx(x, cos[i], sin[i], perm[i])
+            dd = d0
+
         i = t - 1
-        Mx[i*(d+1):, :] = r[i] * get_batch_mx(x, cos[i], sin[i],
-                                              perm[i])
-        w[i*(d+1):] = sqrt(d) / r[i]
+        d0 = int(get_D(d, i+1) / 2)
+        rr = np.ones((d0-dd, 1))
+        rr[:, 0] = r[dd:d0]
+        Mx[i*(d+1):, :] = rr * get_batch_mx(x, cos[i], sin[i], perm[i])
+        w[i*(d+1):] = sqrt(d) / rr[:, 0]
 
     else:
+        dd = 0
         for i in range(t):
-            w[i*(d+1):(i+1)*(d+1)] = sqrt(d) / r[i]
+            d0 = int(get_D(d,(i+1)) / 2)
+            rr = np.ones((d0-dd, 1))
+            rr[:, 0] = r[dd:d0]
+            w[i*(d+1):(i+1)*(d+1)] = sqrt(d) / rr[:, 0]
             Mx[i*(d+1):(i+1)*(d+1), :] = \
-                    r[i] * get_batch_mx(x, cos[i], sin[i], perm[i])
+                    rr * get_batch_mx(x, cos[i], sin[i], perm[i])
+            dd = d0
         div = t * (d+1)
         Mx[div:, :] = -Mx[:D-div, :]
         w[div:] = w[:D-div]
