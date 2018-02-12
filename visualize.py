@@ -7,7 +7,7 @@ import scipy.stats as st
 from matplotlib.ticker import LogFormatterMathtext, MaxNLocator, \
                               ScalarFormatter
 
-from dataset import PARAMS
+from dataset import PARAMS, DIMS
 
 
 CMAP_I = {'G': 2, 'Gort':4, 'ROM':3, 'QMC':1, 'GQ':9, 'B':0}
@@ -130,6 +130,26 @@ def plot_errors(errs_dic, datasets, kernels, approx_types, semilogy=False,
         fig_type = 'plain'
     plt.savefig('figures/check/final_%s_%s.pdf' % (filename, fig_type),
                 dpi=1200, format='pdf')
+    plt.show()
+    return fig
+
+
+def plot_time(times):
+    fig = plt.figure()
+    for a, t in times.items():
+        plt.semilogy(DIMS[1:], t[1:,:].mean(1), label=a,
+                     color=set_color(a), marker=MARKERS[a])
+        plt.legend(loc='best')
+        plt.ylabel('Time, s', fontsize=basefontsize)
+        plt.title('Explicit mapping time', fontsize=basefontsize)
+        plt.xlabel(r'$d$, dataset input dimension', fontsize=basefontsize)
+    fig.tight_layout()
+    top = 0.92
+    right = 0.99
+    left = 0.11
+    bottom = 0.11
+    fig.subplots_adjust(left=left, top=top, right=right,bottom=bottom)
+    plt.savefig('time.pdf', dpi=1200, format='pdf')
     plt.show()
     return fig
 

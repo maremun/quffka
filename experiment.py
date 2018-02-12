@@ -5,10 +5,11 @@
 import numpy as np
 
 from tqdm import tqdm
-from time import perf_counter
 
 from approximate import APPROX, kernel, mapping
-from dataset import PARAMS, make_dataset
+from basics import radius
+from butterfly import butterfly_params
+from dataset import PARAMS, make_dataset, sample_dataset
 from performance import error
 
 
@@ -33,21 +34,25 @@ def relative_errors(X, Y, kernel_type, approx_types, start_deg=1, max_deg=2,
     return errs
 
 
-def time(approx_types):
+def time(approx_types, datasets):
     n = 1
-    runs = 3
+    runs = 5
     times = {}
     for approx_type in tqdm(approx_types):
         print(approx_type)
-        times[approx_type] = np.zeros((len(PARAMS.keys()), runs))
+        times[approx_type] = np.zeros((len(datasets), runs))
         if approx_type == 'exact':
             continue
-        for j, dataset_name in enumerate(PARAMS.keys()):
-            X, _, _= make_dataset(dataset_name)
+        for d, dataset_name in enumerate(datasets):
+            dataset, params = make_dataset(dataset_name)
+            #nsamples = params[-2]
+            X = sample_dataset(10, dataset)
+            dim = X.shape[1]
+            r = radius(dim, 2 * n)  # 2*n since we use RBF kernel
+            b_params = butterfly_params(dim, 2 * n)
+            kwargs = {'r': r, 'b_params': b_params}
             for r in range(runs):
-                start_time = perf_counter()
-                mapping(X, n, 'RBF', approx_type)
-                elapsed = perf_counter() - start_time
-                times[approx_type][j, r] = elapsed
+                _, _, elapsed = mapping(X, n, 'RBF', approx_type, **kwargs)
+                times[approx_type][d, r] = elapsed
 
     return times

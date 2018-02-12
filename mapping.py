@@ -59,7 +59,7 @@ def butt_quad_mapping(x, n, r=None, b_params=None, even=False):
         if n > 0.5:
 # TODO check indexing! d+1?
             d0 = int(get_D(d, 1)/2)
-            rr = np.ones((d0,1))
+            rr = np.ones((d0, 1))
             rr[:, 0] = r[:d0]
             Mx[:d+1, :] = rr * get_batch_mx(x, cos[0], sin[0], perm[0])
             w[:] = sqrt(d) / rr[:, 0]
