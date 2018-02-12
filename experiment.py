@@ -3,6 +3,7 @@
 #   experiment.py
 # TODO documentation
 import numpy as np
+import scipy.stats as st
 
 from tqdm import tqdm
 
@@ -18,7 +19,6 @@ def relative_errors(X, Y, kernel_type, approx_types, start_deg=1, max_deg=2,
     ranks = {}
     i = 0
     for approx_type in tqdm(approx_types):
-        print(approx_type)
         errs[approx_type] = np.zeros((steps, runs))
         ranks[approx_type] = np.zeros((steps, runs))
         if approx_type == 'exact':
