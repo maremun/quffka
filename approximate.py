@@ -12,7 +12,7 @@ from time import perf_counter
 from basics import generate_random_weights, get_D, pad_data
 from butterfly import generate_butterfly_weights
 from gq import generate_gq_weights
-from householder import generate_householder_weights
+#from householder import generate_householder_weights
 from kernels import arccos0_kernel, arccos1_kernel
 from mapping import butt_quad_mapping
 from rom import generate_rademacher_weights, generate_orthogonal_weights
@@ -26,7 +26,7 @@ APPROX = OrderedDict({'exact': None,
           'QMC': [True, generate_halton_weights],
           'GQ': [True, generate_gq_weights],
           'B dense': [True, generate_butterfly_weights],
-          'B': [False, butt_quad_mapping]
+          'B': [False, butt_quad_mapping],
           #'H': [True, generate_householder_weights],
           })
 KERNEL = OrderedDict({

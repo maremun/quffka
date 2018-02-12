@@ -11,8 +11,8 @@ from os.path import join
 from dataset import PARAMS, DIMS
 
 
-CMAP_I = {'G': 2, 'Gort':4, 'ROM':3, 'QMC':1, 'GQ':9, 'B':0}
-MARKERS = {'G':'s', 'Gort':'D','ROM':'*', 'QMC':'v', 'GQ':'^', 'B':'o'}
+CMAP_I = {'G': 2, 'Gort':4, 'ROM':3, 'QMC':1, 'GQ':9, 'B':0, 'H':8}
+MARKERS = {'G':'s', 'Gort':'D','ROM':'*', 'QMC':'v', 'GQ':'^', 'B':'o', 'H':'P'}
 
 
 #TODO setup layout params to work properly with different number of
@@ -55,7 +55,7 @@ def plot_errors(errs_dic, datasets, kernels, approx_types, semilogy=False,
             formatter = LogFormatterMathtext()
             formatterx = ScalarFormatter(useMathText=True, useOffset=False)
             formatterx.set_powerlimits((-1,1))
-            axes[k, l].xaxis.set_major_locator(MaxNLocator(max_deg))
+            axes[k, l].xaxis.set_major_locator(MaxNLocator(integer=True))
             axes[k, l].yaxis.set_major_locator(MaxNLocator(6))
 
             ci = np.empty((max_deg, 2))
@@ -129,7 +129,7 @@ def plot_errors(errs_dic, datasets, kernels, approx_types, semilogy=False,
         fig_type = 'semilogy'
     else:
         fig_type = 'plain'
-    filepath = join(save_to, 'kernel_accuracy%s_%s' % (filename, fig_type))
+    filepath = join(save_to, 'kernel_accuracy%s_%s.pdf' % (filename, fig_type))
     plt.savefig(filepath, dpi=1200, format='pdf')
     plt.show()
     return fig
