@@ -7,6 +7,7 @@ import numpy as np
 from collections import OrderedDict
 from math import sqrt
 from sklearn.metrics.pairwise import rbf_kernel
+from time import perf_counter
 
 from basics import generate_random_weights, get_D, pad_data
 from butterfly import generate_butterfly_weights
@@ -75,7 +76,7 @@ def kernel(X, Y, n, kernel_type, approx_type, **kwargs):
     b = KERNEL_B[kernel_type]
 
     Z = np.vstack((Xc, Yc))  # stack X and Y
-    Mz, w = mapping(Z, n, kernel_type, approx_type)  # , **kwargs) input scaled
+    Mz, w, _ = mapping(Z, n, kernel_type, approx_type)  # , **kwargs) input scaled
     Mx, My = np.split(Mz, [X.shape[0]], 0)
     K = np.dot(Mx, My.T)
     if approx_type != 'GQ':
@@ -104,9 +105,13 @@ def mapping(Z, n, kernel_type, approx_type, **kwargs):
         d1 = M.shape[1]
         if d1 > d:
             Z = pad_data(Z, d1, d)
+        start_time = perf_counter()
         MZ = np.dot(Z, M.T)
     else:
-        MZ, w = f(Z.T, n, even=even)
+        r = kwargs.get('r', None)
+        b_params = kwargs.get('b_params', None)
+        start_time = perf_counter()
+        MZ, w = f(Z.T, n, r=r, b_params=b_params, even=even)
         MZ = MZ.T
 
     MZ = non_linear(MZ)
@@ -116,5 +121,5 @@ def mapping(Z, n, kernel_type, approx_type, **kwargs):
             MZ = np.einsum('j,ij->ij', ww, MZ)
         else:
             MZ = np.einsum('j,ij->ij', w, MZ)
-
-    return MZ, w
+    elapsed = perf_counter() - start_time
+    return MZ, w, elapsed

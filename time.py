@@ -9,6 +9,7 @@ import pickle as pkl
 from experiment import time
 
 approx_types = ['G', 'Gort', 'GQ', 'B']
+datasets = ['Powerplant', 'LETTER', 'USPS', 'MNIST', 'CIFAR100', 'LEUKEMIA']
 
 mkl_rt = ctypes.CDLL('libmkl_rt.so')
 print(mkl_rt.mkl_get_max_threads())
@@ -20,6 +21,6 @@ def mkl_set_num_threads(cores):
 mkl_set_num_threads(1)
 print(mkl_get_max_threads())
 
-times = time(approx_types)
+times = time(approx_types, datasets)
 with open('times_%r' % approx_types, 'wb') as f:
     pkl.dump(times, f)
