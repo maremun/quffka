@@ -1,0 +1,11 @@
+xlrd
+tqdm
+tensorflow-gpu
+telepyth
+scipy
+scikit-learn
+pandas
+numpy
+numba
+matplotlib
+ghalton

@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
 #   encoding: utf-8
 #   basics.py
 # TODO documentation!
+
 import numpy as np
 
 from math import sqrt

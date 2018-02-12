@@ -1,3 +1,7 @@
+#   encoding: utf-8
+#   visualize.py
+# TODO documentation
+
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
@@ -8,7 +12,7 @@ from matplotlib.ticker import LogFormatterMathtext, MaxNLocator, \
                               ScalarFormatter
 from os.path import join
 
-from dataset import PARAMS, DIMS
+from .dataset import PARAMS, DIMS
 
 
 CMAP_I = {'G': 2, 'Gort':4, 'ROM':3, 'QMC':1, 'GQ':9, 'B':0, 'H':8}

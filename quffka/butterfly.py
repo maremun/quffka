@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
 #   encoding: utf-8
 #   butterfly.py
 # TODO fix documentation
+
 import numpy as np
 
 from math import sqrt
@@ -9,7 +9,7 @@ from numba import jit
 from scipy.linalg import block_diag
 from scipy.stats import chi
 
-from basics import get_D, radius, rnsimp
+from .basics import get_D, radius, rnsimp
 NQ = 3
 
 

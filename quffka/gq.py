@@ -4,7 +4,7 @@
 import numpy as np
 import numpy.polynomial.hermite as herm
 
-from basics import get_D
+from .basics import get_D
 
 
 def generate_gq_weights(d, n, deg=2):

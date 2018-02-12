@@ -1,14 +1,15 @@
-#!/usr/bin/env python3
 #   encoding: utf-8
 #   qmc.py
 
 import ghalton
 import numpy as np
 
-from basics import get_D
-from lattice import lattice
 from scipy.stats import norm
 #from sobol import i4_sobol_generate
+
+from .basics import get_D
+from .lattice import lattice
+
 
 EPS = 1e-6
 

@@ -1,16 +1,16 @@
-#!/usr/bin/env python3
 #   encoding: utf-8
 #   experiment.py
 # TODO documentation
+
 import numpy as np
 
 from tqdm import tqdm
 
-from approximate import APPROX, kernel, mapping
-from basics import radius
-from butterfly import butterfly_params
-from dataset import PARAMS, make_dataset, sample_dataset
-from performance import error
+from .approximate import APPROX, kernel, mapping
+from .basics import radius
+from .butterfly import butterfly_params
+from .dataset import PARAMS, make_dataset, sample_dataset
+from .performance import error
 
 
 def relative_errors(X, Y, kernel_type, approx_types, start_deg=1, max_deg=2,

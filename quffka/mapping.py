@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #   encoding: utf-8
 #   mapping.py
 
@@ -12,9 +11,9 @@ import numpy as np
 from math import sqrt
 from numba import jit
 
-from basics import batch_simplex_matvec, get_D, radius
-from butterfly import butterfly_params
-from butterfly_matvecs import batch_butterfly_matvec
+from .basics import batch_simplex_matvec, get_D, radius
+from .butterfly import butterfly_params
+from .butterfly_matvecs import batch_butterfly_matvec
 
 
 @jit(nopython=True)

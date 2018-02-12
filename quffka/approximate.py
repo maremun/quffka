@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
 #   encoding: utf-8
 #   approximate.py
 # TODO documentation
+
 import numpy as np
 
 from collections import OrderedDict
@@ -9,14 +9,14 @@ from math import sqrt
 from sklearn.metrics.pairwise import rbf_kernel
 from time import perf_counter
 
-from basics import generate_random_weights, get_D, pad_data
-from butterfly import generate_butterfly_weights
-from gq import generate_gq_weights
-#from householder import generate_householder_weights
-from kernels import arccos0_kernel, arccos1_kernel
-from mapping import butt_quad_mapping
-from rom import generate_rademacher_weights, generate_orthogonal_weights
-from qmc import generate_halton_weights
+from .basics import generate_random_weights, get_D, pad_data
+from .butterfly import generate_butterfly_weights
+from .gq import generate_gq_weights
+#from .householder import generate_householder_weights
+from .kernels import arccos0_kernel, arccos1_kernel
+from .mapping import butt_quad_mapping
+from .rom import generate_rademacher_weights, generate_orthogonal_weights
+from .qmc import generate_halton_weights
 
 
 APPROX = OrderedDict({'exact': None,

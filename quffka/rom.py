@@ -1,14 +1,14 @@
-#!/usr/bin/env python3
 #   encoding: utf-8
 #   rom.py
 # TODO documentation!
+
 import numpy as np
 
 from math import sqrt
 from numba import jit
 
-from basics import get_D, rnsimp, radius
-from butterfly import butterfly, butterfly_params
+from .basics import get_D, rnsimp, radius
+from .butterfly import butterfly, butterfly_params
 
 
 @jit(nopython=True)
