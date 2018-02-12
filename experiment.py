@@ -3,7 +3,6 @@
 #   experiment.py
 # TODO documentation
 import numpy as np
-import scipy.stats as st
 
 from tqdm import tqdm
 
