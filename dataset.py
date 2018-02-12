@@ -10,8 +10,8 @@ from tensorflow.examples.tutorials.mnist import input_data
 PARAMS = {'USPS': [1, 5, 500, 0, 1, 550, 4500],
           'Powerplant': [1, 5, 500, 0, 1, 550, 8500],
           'LETTER': [1, 5, 500, 0, 1, 550, 10000],
-          'MNIST': [1, 5, 50, 0, 1, 50, 50000],
-          'CIFAR100': [1, 5, 50, 0, 1, 50, 50000],
+          'MNIST': [1, 5, 100, 0, 1, 550, 50000],
+          'CIFAR100': [1, 5, 50, 0, 1, 550, 50000],
           'LEUKEMIA': [1, 5, 10, 0, 1, 10, 38]
           }
 
@@ -69,6 +69,4 @@ def make_dataset(dataset_name, params=None):
 
     xtrain, xtest = scale_data(xtrain, xtest)
     dataset = [xtrain, ytrain, xtest, ytest]
-    X = sample_dataset(NSAMPLES, dataset)
-    Y = sample_dataset(NSAMPLES, dataset)
-    return X, Y, params
+    return dataset, params
