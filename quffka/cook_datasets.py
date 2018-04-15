@@ -4,6 +4,7 @@
 
 import numpy as np
 import pandas as pd
+import pickle
 
 from sklearn.preprocessing import StandardScaler
 
@@ -13,7 +14,6 @@ LEU_DIM = 7129
 
 
 def unpickle(file):
-    import pickle
     with open(file, 'rb') as fo:
         dict = pickle.load(fo, encoding='bytes')
     return dict

@@ -24,5 +24,5 @@ print(mkl_get_max_threads())
 
 def main():
     times = time(approx_types, datasets)
-    with open('times_%r' % approx_types, 'wb') as f:
+    with open('results/times_%r' % approx_types, 'wb') as f:
         pkl.dump(times, f)

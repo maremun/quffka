@@ -9,6 +9,7 @@ Three simple steps to kernel approximation:
 To prepare datasets, run:
 
 ```bash
+    $ ./download_datasets.sh
     $ cook-datasets
 ```
 
