@@ -1,6 +1,5 @@
 xlrd
 tqdm
-tensorflow-gpu
 telepyth
 scipy
 scikit-learn

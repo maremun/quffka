@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from tensorflow.examples.tutorials.mnist import input_data
+from .download_mnist import load_mnist
 
 
 PARAMS = {'USPS': [1, 5, 500, 0, 1, 550, 4500],
@@ -26,7 +26,7 @@ def pack_dataset(data, labels, n):
 
 
 def load_dataset(name, n):
-    path = 'datasets/%s/' % name
+    path = '../datasets/%s/' % name
     data = np.load(path+'data.npy')
     labels = np.load(path+'labels.npy')
     return pack_dataset(data, labels, n)
@@ -56,11 +56,7 @@ def make_dataset(dataset_name, params=None):
     start_deg, max_deg, runs, shift, step, NSAMPLES, delimiter = params
 
     if dataset_name == 'MNIST':
-        mnist = input_data.read_data_sets("datasets/MNIST_data/", one_hot=False)
-        xtrain = mnist.train.images
-        ytrain = mnist.train.labels
-        xtest = mnist.test.images
-        ytest = mnist.test.labels
+        xtrain, ytrain, xtest, ytest = load_mnist()
         d = xtrain.shape[1]
     else:
         dataset, d = load_dataset(dataset_name, delimiter)
