@@ -29,7 +29,6 @@ def load_dataset(name, n):
     path = 'datasets/%s/' % name
     data = np.load(path+'data.npy')
     labels = np.load(path+'labels.npy')
-
     return pack_dataset(data, labels, n)
 
 

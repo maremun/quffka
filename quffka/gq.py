@@ -1,5 +1,6 @@
-#   enconfing: utf-8
+#   enconding: utf-8
 #   gaussquad.py
+# TODO fix Documentation
 
 import numpy as np
 import numpy.polynomial.hermite as herm
@@ -12,7 +13,8 @@ def generate_gq_weights(d, n, deg=2):
     Subsample points and weights for Gauss-Hermite quadrature.
     Args
         d: the number of dimensions of the integral.
-        L: the number of new features
+        n: number of SR rules to be equivalent to in terms of output feature
+           dimensionality D.
         deg: the degree of the polynomial that is approximated accurately by
              this quadrule is 2-1.
 
@@ -51,6 +53,7 @@ def generate_gq_weights(d, n, deg=2):
     A_subsampled /= A_subsampled.sum()
     W_subsampled *= np.sqrt(2)
     return W_subsampled.T, np.sqrt(A_subsampled)
+
 
 def explicit_map(Z, W):
     nsamples = W.shape[0]

@@ -76,7 +76,7 @@ def kernel(X, Y, n, kernel_type, approx_type, **kwargs):
     b = KERNEL_B[kernel_type]
 
     Z = np.vstack((Xc, Yc))  # stack X and Y
-    Mz, w, _ = mapping(Z, n, kernel_type, approx_type)  # , **kwargs) input scaled
+    Mz, w, _ = mapping(Z, n, kernel_type, approx_type)  # input scaled
     Mx, My = np.split(Mz, [X.shape[0]], 0)
     K = np.dot(Mx, My.T)
     if approx_type != 'GQ':
@@ -86,7 +86,6 @@ def kernel(X, Y, n, kernel_type, approx_type, **kwargs):
             K += b(w)
 
     K *= c
-
     return K
 
 

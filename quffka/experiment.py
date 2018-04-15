@@ -30,7 +30,6 @@ def relative_errors(X, Y, kernel_type, approx_types, start_deg=1, max_deg=2,
                 K = kernel(X, Y, nn, kernel_type, approx_type)
                 ranks[approx_type][j, r] = np.linalg.matrix_rank(K)
                 errs[approx_type][j, r] = error(K_exact, K)
-
     return errs
 
 
@@ -45,7 +44,6 @@ def time(approx_types, datasets):
             continue
         for d, dataset_name in enumerate(datasets):
             dataset, params = make_dataset(dataset_name)
-            #nsamples = params[-2]
             X = sample_dataset(10, dataset)
             dim = X.shape[1]
             r = radius(dim, 2 * n)  # 2*n since we use RBF kernel
@@ -54,5 +52,4 @@ def time(approx_types, datasets):
             for r in range(runs):
                 _, _, elapsed = mapping(X, n, 'RBF', approx_type, **kwargs)
                 times[approx_type][d, r] = elapsed
-
     return times

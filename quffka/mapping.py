@@ -1,7 +1,8 @@
 #   encoding: utf-8
 #   mapping.py
+# TODO fix Documentation!
 
-# TODO No other method except quadrature-based does not use weights. Quadrature
+# TODO No other method except quadrature-based uses weights. Quadrature
 # based is used via batch matvec function, so no point in using w here?
 
 # TODO fast_batch_approx_kernel should have kwargs to be able to receive kernel
@@ -108,5 +109,4 @@ def butt_quad_mapping(x, n, r=None, b_params=None, even=False):
         div = t * (d+1)
         Mx[div:, :] = -Mx[:D-div, :]
         w[div:] = w[:D-div]
-
     return Mx, w

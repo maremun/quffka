@@ -28,9 +28,10 @@ def get_D(d, n):
     '''
     when using simplex method to generate points, we add also reflected ones,
     so the overall number of points created is 2 * (n+1) + 1, where 1 comes
-    from the weight of function at zero.
+    from the weight of function at zero. Since we add f(0) directly to the
+    integral, we don't need to account for it in D here.
     '''
-    D = int(n * (2 * (d+1)))  # + 1))
+    D = int(n * (2 * (d+1)))
     return D
 
 
@@ -60,7 +61,6 @@ def rnsimp(m):
         rv = np.sqrt(mp / ((m - i) * m * (m - i + 1.)))
         S[i, i] = (m - i) * rv
         S[i, i+1:m+1] = -rv
-
     return S
 
 
@@ -79,7 +79,6 @@ def simplex_matvec(x):
         r[i] = s + rv[i] * (d-i)
         s += -rv[i]
     r[d] = s
-
     return r
 
 

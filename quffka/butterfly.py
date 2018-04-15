@@ -29,7 +29,7 @@ def butterfly_generating_vector(n):
     u: generating vector used to calculate angles for random butterfly
         orthogonal matrices.
     '''
-    l = n//2 - 1
+    l = n // 2 - 1
     r = np.random.rand(n-1)
     u = np.zeros(n)
 
@@ -117,7 +117,7 @@ def butterfly_block(n, cos, sin):
     '''
     Generates n x n block of a butterfly matrix.
     '''
-    i = n//2
+    i = n // 2
     sdiag = np.repeat(sin[i-1], i)
     Q = np.diagflat(-1 * sdiag, i)
     Q -= Q.T

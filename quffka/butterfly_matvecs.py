@@ -1,5 +1,6 @@
 #   encoding: utf-8
 #   butterfly.py
+# TODO Documentation!
 
 import numpy as np
 
@@ -62,12 +63,14 @@ def batch_factor_matvec(x, n, cos, sin):
             y2 = x[i2, o]
             r[i1, o] = c * y1 + s * y2
             r[i2, o] = -s * y1 + c * y2
-
     return r
 
 
 @jit(nopython=True)
 def batch_butterfly_matvec(x, cos, sin, p):
+    '''
+    Apply butterfly matvec NQ times.
+    '''
     d = x.shape[0]
     h = int(np.ceil(np.log2(d)))
 
@@ -75,5 +78,4 @@ def batch_butterfly_matvec(x, cos, sin, p):
         for n in range(1, h+1):
             x = batch_factor_matvec(x, n, cos, sin)
         x = x[p, :]
-
     return x
