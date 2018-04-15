@@ -4,6 +4,12 @@
 applies simple quadrature rules to generate random features for kernel
 approximation.
 
+Clone and install:
+```bash
+    $ cd quffka
+    $ pip install .
+```
+
 Three simple steps to kernel approximation:
 
 To prepare datasets, run:
