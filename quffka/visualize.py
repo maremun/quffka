@@ -15,8 +15,8 @@ from os.path import join
 from .dataset import PARAMS, DIMS
 
 
-CMAP_I = {'G': 2, 'Gort':4, 'ROM':3, 'QMC':1, 'GQ':9, 'B':0, 'H':8}
-MARKERS = {'G':'s', 'Gort':'D','ROM':'*', 'QMC':'v', 'GQ':'^', 'B':'o', 'H':'P'}
+CMAP_I = {'G':2, 'Gort':4, 'ROM':3, 'QMC':1, 'GQ':9, 'B':0, 'H':8}
+MARKERS = {'G':'s', 'Gort':'D', 'ROM':'*', 'QMC':'v', 'GQ':'^', 'B':'o', 'H':'P'}
 
 
 #TODO setup layout params to work properly with different number of
@@ -129,6 +129,9 @@ def plot_errors(errs_dic, datasets, kernels, approx_types, semilogy=False,
 
 def plot_time(times, save_to='results'):
     fig = plt.figure()
+
+    aps = []
+    ts = []
     for a, t in times.items():
         plt.semilogy(DIMS[1:], t[1:,:].mean(1), label=a,
                      color=set_color(a), marker=MARKERS[a])
@@ -136,12 +139,21 @@ def plot_time(times, save_to='results'):
         plt.ylabel('Time, s', fontsize=basefontsize)
         plt.title('Explicit mapping time', fontsize=basefontsize)
         plt.xlabel(r'$d$, dataset input dimension', fontsize=basefontsize)
+        aps.append(a)
+        ts.append(t[-1,:].mean())
+
+    patches = []
+    for t, a in sorted(zip(ts, aps), reverse=True):
+        patches.append(mlines.Line2D([], [], color=set_color(a),
+                       marker=MARKERS[a], markersize=5,
+                       label=a))
+    plt.legend(handles=patches)
     fig.tight_layout()
     top = 0.92
     right = 0.99
     left = 0.11
     bottom = 0.11
-    fig.subplots_adjust(left=left, top=top, right=right,bottom=bottom)
+    fig.subplots_adjust(left=left, top=top, right=right, bottom=bottom)
     plt.show()
     return fig
 
