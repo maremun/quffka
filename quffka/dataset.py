@@ -25,8 +25,8 @@ def pack_dataset(data, labels, n):
     return [xtrain, ytrain, xtest, ytest], d
 
 
-def load_dataset(name, n):
-    path = '../datasets/%s/' % name
+def load_dataset(name, n, path):
+    path = path + '%s/' % name
     data = np.load(path+'data.npy')
     labels = np.load(path+'labels.npy')
     return pack_dataset(data, labels, n)
@@ -50,7 +50,7 @@ def scale_data(xtrain, xtest):
     return xtrain, xtest
 
 
-def make_dataset(dataset_name, params=None):
+def make_dataset(dataset_name, params=None, path='../datasets/'):
     if params is None:
         params = PARAMS[dataset_name]
     start_deg, max_deg, runs, shift, step, NSAMPLES, delimiter = params
@@ -59,7 +59,7 @@ def make_dataset(dataset_name, params=None):
         xtrain, ytrain, xtest, ytest = load_mnist()
         d = xtrain.shape[1]
     else:
-        dataset, d = load_dataset(dataset_name, delimiter)
+        dataset, d = load_dataset(dataset_name, delimiter, path)
         xtrain, ytrain, xtest, ytest = dataset
 
     xtrain, xtest = scale_data(xtrain, xtest)

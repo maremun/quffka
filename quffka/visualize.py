@@ -127,7 +127,7 @@ def plot_errors(errs_dic, datasets, kernels, approx_types, semilogy=False,
     return fig
 
 
-def plot_time(times, save_to='results'):
+def plot_time(times):
     fig = plt.figure()
 
     aps = []

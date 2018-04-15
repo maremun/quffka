@@ -33,11 +33,11 @@ def main():
     approx_types_large_d = ['G', 'Gort', 'ROM', 'GQ', 'B']
 
     datasets = ['Powerplant', 'LETTER'] #, 'USPS', 'MNIST', 'CIFAR100', 'LEUKEMIA']
-    kernels = ['Arccos 1', 'RBF', 'Arccos 0']
+    kernels = ['Arccos 1']  # , 'RBF', 'Arccos 0']
 
     sample_params = None  # [1, 3, 1, 0, 1, 10, 50]
     for name in datasets:
-        dataset, params = make_dataset(name, sample_params)
+        dataset, params = make_dataset(name, sample_params, 'datasets/')
         start_deg, max_deg, runs, shift, step, nsamples, _ = params
         X = sample_dataset(nsamples, dataset)
         Y = sample_dataset(nsamples, dataset)
