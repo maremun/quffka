@@ -25,9 +25,9 @@ APPROX = OrderedDict({'exact': None,
           'ROM': [True, generate_rademacher_weights],
           'QMC': [True, generate_halton_weights],
           'GQ': [True, generate_gq_weights],
-          'B dense': [True, generate_butterfly_weights],
+          # 'B dense': [True, generate_butterfly_weights],
           'B': [False, butt_quad_mapping],
-          #'H': [True, generate_householder_weights],
+          # 'H': [True, generate_householder_weights],
           })
 KERNEL = OrderedDict({
              'RBF': rbf_kernel,
@@ -76,7 +76,7 @@ def kernel(X, Y, n, kernel_type, approx_type, **kwargs):
     b = KERNEL_B[kernel_type]
 
     Z = np.vstack((Xc, Yc))  # stack X and Y
-    Mz, w, _ = mapping(Z, n, kernel_type, approx_type)  # input scaled
+    Mz, w, _ = mapping(Z, n, kernel_type, approx_type, **kwargs)  # input scaled
     Mx, My = np.split(Mz, [X.shape[0]], 0)
     K = np.dot(Mx, My.T)
     if approx_type != 'GQ':
@@ -96,11 +96,14 @@ def mapping(Z, n, kernel_type, approx_type, **kwargs):
     if kernel_type == 'RBF':
         even = True
     if flag:
+        M = kwargs.get('M', None)
+        w = kwargs.get('w', None)
         d = Z.shape[1]
-        if approx_type == 'B dense':
-            M, w = f(d, n, even=even)
-        else:
-            M, w = f(d, n)
+        if M is None:
+            if approx_type == 'B dense':
+                M, w = f(d, n, even=even)
+            else:
+                M, w = f(d, n)
         d1 = M.shape[1]
         if d1 > d:
             Z = pad_data(Z, d1, d)

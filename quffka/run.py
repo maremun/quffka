@@ -28,12 +28,12 @@ print(mkl_get_max_threads())
 
 def main():
     tp = TelepythClient()
-    approx_types = ['G', 'Gort']  #, 'ROM', 'QMC', 'GQ', 'B']
+    approx_types = ['G', 'Gort', 'ROM', 'QMC', 'GQ', 'B']
     # ghalton cannot generate large enough sequences for datasets CIFAR100 and LEUKEMIA
     approx_types_large_d = ['G', 'Gort', 'ROM', 'GQ', 'B']
 
-    datasets = ['Powerplant', 'LETTER'] #, 'USPS', 'MNIST', 'CIFAR100', 'LEUKEMIA']
-    kernels = ['Arccos 1']  # , 'RBF', 'Arccos 0']
+    datasets = ['Powerplant', 'LETTER', 'USPS', 'MNIST', 'CIFAR100', 'LEUKEMIA']
+    kernels = ['Arccos 1', 'RBF', 'Arccos 0']
 
     sample_params = None  # [1, 3, 1, 0, 1, 10, 50]
     for name in datasets:

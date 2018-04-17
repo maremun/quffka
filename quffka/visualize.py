@@ -43,7 +43,7 @@ def plot_errors(errs_dic, datasets, kernels, approx_types, semilogy=False,
     fig, axes = plt.subplots(ncols=m, nrows=n, figsize=(w*m, h))
 
     if acc:
-        ylabel = 'accuracy/R^2'
+        ylabel = r'accuracy/$R^2$'
     else:
         ylabel = r'$\frac{\|K - \hat{K}\|}{\|K\|}$'
 
