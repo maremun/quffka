@@ -247,8 +247,6 @@ def generate_butterfly_weights(d, n, r=None, b_params=None, even=False):
     for i in range(1, t):
         L = butterfly_transform(S, cos[i], sin[i], perm[i])
         M = np.vstack((M, L.T))
-    mp = d + 1
-    r = np.repeat(r, mp)
     M = np.einsum('i,ij->ij', r, M)
     w = sqrt(d) / r
     if even is False:
